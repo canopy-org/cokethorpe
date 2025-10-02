@@ -1,13 +1,15 @@
 import { getBuildingById, buildings } from '@/lib/buildings';
 import { notFound } from 'next/navigation';
 import BuildingMetrics from '@/components/building/BuildingMetrics';
+import BuildingCharts from '@/components/building/BuildingCharts';
 
-export default function BuildingPage({ 
+export default async function BuildingPage({ 
   params 
 }: { 
-  params: { buildingId: string } 
+  params: Promise<{ buildingId: string }>
 }) {
-  const building = getBuildingById(params.buildingId);
+  const { buildingId } = await params;
+  const building = getBuildingById(buildingId);
 
   if (!building) {
     notFound();
@@ -39,35 +41,7 @@ export default function BuildingPage({
         <BuildingMetrics />
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Temperature History</h2>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-              <p className="text-gray-400">Chart coming soon...</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Humidity History</h2>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-              <p className="text-gray-400">Chart coming soon...</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Energy Usage</h2>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-              <p className="text-gray-400">Chart coming soon...</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Daily Summary</h2>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-              <p className="text-gray-400">Summary coming soon...</p>
-            </div>
-          </div>
-        </div>
+        <BuildingCharts />
       </div>
     </div>
   );
