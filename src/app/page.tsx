@@ -35,20 +35,24 @@ export default function Home() {
     <>
       <style jsx global>{`
         body {
-          font-family: Arial, sans-serif;
-          background: #1a1a1a;
-          color: #fff;
-          margin: 0;
-          padding: 0;
-          overflow: hidden;
-        }
+  font-family: Arial, sans-serif;
+  background: #1a1a1a;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
         
-        #container-view {
-          position: relative;
-          width: 100vw;
-          height: 100vh;
-          overflow: hidden;
-        }
+        main {
+  height: calc(100vh - 64px); /* 64px is header height */
+  overflow: hidden;
+}
+
+#container-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
         
         #container-view img {
           width: 100%;
