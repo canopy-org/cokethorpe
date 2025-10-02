@@ -4,29 +4,12 @@ import { useState } from 'react';
 import { SensorType } from '@/types/sensor';
 import { useSensorData } from '@/hooks/useSensorData';
 import { getColorForMetric, getUnitForMetric } from '@/lib/utils';
+import { buildings } from '@/lib/buildings';
+
 
 export default function Home() {
   const [selectedMetric, setSelectedMetric] = useState<SensorType>('temperature');
   const { value, lastUpdate, error } = useSensorData(selectedMetric);
-
-  // Random positions for 15 buildings (scattered across the page)
-  const buildingPositions = [
-    { top: '15%', left: '20%' },
-    { top: '25%', left: '45%' },
-    { top: '18%', left: '70%' },
-    { top: '35%', left: '15%' },
-    { top: '40%', left: '55%' },
-    { top: '38%', left: '80%' },
-    { top: '55%', left: '25%' },
-    { top: '52%', left: '50%' },
-    { top: '58%', left: '75%' },
-    { top: '70%', left: '18%' },
-    { top: '68%', left: '42%' },
-    { top: '72%', left: '68%' },
-    { top: '82%', left: '30%' },
-    { top: '85%', left: '60%' },
-    { top: '80%', left: '85%' }
-  ];
 
   const backgroundColor = value !== null ? getColorForMetric(value, selectedMetric) : '#95a5a6';
   const unit = getUnitForMetric(selectedMetric);
@@ -196,22 +179,24 @@ export default function Home() {
       <div id="container-view">
         <img src="/3d_map.jpg" alt="Site Plan" />
         
-        {buildingPositions.map((pos, index) => (
-          <div 
-            key={index}
-            className="temp-sensor" 
-            style={{
-              top: pos.top, 
-              left: pos.left,
-              backgroundColor: backgroundColor
-            }}
-          >
-            <div className="building-label">Building {index + 1}</div>
-            <div className="temp-value">
-              {value !== null ? value.toFixed(1) : '--'}{unit}
-            </div>
-          </div>
-        ))}
+        {buildings.map((building) => (
+  <div 
+    key={building.id}
+    className="temp-sensor" 
+    style={{
+      top: building.coordinates.top, 
+      left: building.coordinates.left,
+      backgroundColor: backgroundColor
+    }}
+  >
+    <div className="building-label">{building.name}</div>
+    <div className="temp-value">
+      {value !== null ? value.toFixed(1) : '--'}{unit}
+    </div>
+  </div>
+))}
+          
+            
         
         <div id="status">
           {error ? (

@@ -2,15 +2,11 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { buildings } from '@/lib/buildings';
 
 export default function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Temporary building list (we'll make this dynamic later)
-  const buildings = Array.from({ length: 15 }, (_, i) => ({
-    id: i + 1,
-    name: `Building ${i + 1}`
-  }));
 
   return (
     <header className="bg-slate-800 text-white shadow-lg">
