@@ -2,11 +2,15 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { buildings } from '@/lib/buildings';
+import WeatherWidget from './WeatherWidget';
 
 export default function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  const buildings = Array.from({ length: 15 }, (_, i) => ({
+    id: i + 1,
+    name: `Building ${i + 1}`
+  }));
 
   return (
     <header className="bg-slate-800 text-white shadow-lg">
@@ -15,7 +19,7 @@ export default function Header() {
           {/* Logo/Brand */}
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold hover:text-blue-400 transition">
-              Cokethorpe Energy
+              Cokethorpe
             </Link>
           </div>
 
@@ -52,7 +56,6 @@ export default function Header() {
                 </svg>
               </button>
 
-              {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <div className="absolute top-full right-0 mt-2 w-48 bg-slate-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
                   {buildings.map((building) => (
@@ -70,12 +73,9 @@ export default function Header() {
             </div>
           </nav>
 
-          {/* Weather Widget (placeholder) */}
+          {/* Right side: Weather + Auth */}
           <div className="flex items-center gap-4">
-            <div className="text-sm">
-              <span className="text-gray-400">Outside: </span>
-              <span className="font-semibold">12°C ☀️</span>
-            </div>
+            <WeatherWidget />
             
             {/* Auth button placeholder */}
             <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition">

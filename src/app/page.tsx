@@ -2,40 +2,66 @@
 
 import { useState } from 'react';
 import { SensorType } from '@/types/sensor';
+import { buildings } from '@/lib/buildings';
 import { useSensorData } from '@/hooks/useSensorData';
 import { getColorForMetric, getUnitForMetric } from '@/lib/utils';
-import { buildings } from '@/lib/buildings';
 
+function BuildingMarker({ 
+  building, 
+  selectedMetric 
+}: { 
+  building: typeof buildings[0], 
+  selectedMetric: SensorType 
+}) {
+  const { value } = useSensorData(selectedMetric, 5000, building.BuildingTag);
+  
+  const backgroundColor = value !== null 
+    ? getColorForMetric(value, selectedMetric) 
+    : '#95a5a6';
+  const unit = getUnitForMetric(selectedMetric);
+
+  return (
+    <div 
+      className="temp-sensor" 
+      style={{
+        top: building.coordinates.top, 
+        left: building.coordinates.left,
+        backgroundColor: backgroundColor
+      }}
+    >
+      <div className="building-label">{building.name}</div>
+      <div className="temp-value">
+        {value !== null ? value.toFixed(1) : '--'}{unit}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [selectedMetric, setSelectedMetric] = useState<SensorType>('temperature');
-  const { value, lastUpdate, error } = useSensorData(selectedMetric);
-
-  const backgroundColor = value !== null ? getColorForMetric(value, selectedMetric) : '#95a5a6';
-  const unit = getUnitForMetric(selectedMetric);
 
   return (
     <>
       <style jsx global>{`
         body {
-  font-family: Arial, sans-serif;
-  background: #1a1a1a;
-  color: #fff;
-  margin: 0;
-  padding: 0;
-}
+          font-family: Arial, sans-serif;
+          background: #1a1a1a;
+          color: #fff;
+          margin: 0;
+          padding: 0;
+        }
         
         main {
-  height: calc(100vh - 64px); /* 64px is header height */
-  overflow: hidden;
-}
-
-#container-view {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
+          height: calc(100vh - 64px);
+          overflow: hidden;
+        }
+        
+        #container-view {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+        }
         
         #container-view img {
           width: 100%;
@@ -83,7 +109,7 @@ export default function Home() {
         
         #legend-container {
           position: fixed;
-          top: 20px;
+          top: 84px;
           right: 20px;
           background: rgba(44, 62, 80, 0.95);
           padding: 15px 20px;
@@ -121,21 +147,6 @@ export default function Home() {
           font-size: 14px;
           cursor: pointer;
           user-select: none;
-        }
-        
-        #status {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          background: rgba(44, 62, 80, 0.9);
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-size: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-        
-        .error {
-          color: #e74c3c;
         }
       `}</style>
 
@@ -180,33 +191,12 @@ export default function Home() {
         <img src="/3d_map.jpg" alt="Site Plan" />
         
         {buildings.map((building) => (
-  <div 
-    key={building.id}
-    className="temp-sensor" 
-    style={{
-      top: building.coordinates.top, 
-      left: building.coordinates.left,
-      backgroundColor: backgroundColor
-    }}
-  >
-    <div className="building-label">{building.name}</div>
-    <div className="temp-value">
-      {value !== null ? value.toFixed(1) : '--'}{unit}
-    </div>
-  </div>
-))}
-          
-            
-        
-        <div id="status">
-          {error ? (
-            <span className="error">Error: {error}</span>
-          ) : lastUpdate ? (
-            `Last update: ${lastUpdate.toLocaleTimeString()}`
-          ) : (
-            'Connecting...'
-          )}
-        </div>
+          <BuildingMarker
+            key={building.id}
+            building={building}
+            selectedMetric={selectedMetric}
+          />
+        ))}
       </div>
     </>
   );

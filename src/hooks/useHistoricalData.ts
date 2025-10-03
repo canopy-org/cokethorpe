@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SensorType } from '@/types/sensor';
-import { queryInfluxDB, influxConfig } from '@/lib/influxdb';
+import { queryInfluxDB, buildHistoricalFluxQuery, influxConfig } from '@/lib/influxdb';
 
 interface DataPoint {
   timestamp: string;
@@ -10,7 +10,8 @@ interface DataPoint {
 export function useHistoricalData(
   metric: SensorType, 
   timeRange: string = '-24h',
-  interval: string = '15m'
+  interval: string = '15m',
+  buildingTag?: string
 ) {
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,17 +21,17 @@ export function useHistoricalData(
     async function fetchHistoricalData() {
       setLoading(true);
       try {
-        const query = `
-          from(bucket: "${influxConfig.bucket}")
-            |> range(start: ${timeRange})
-            |> filter(fn: (r) => r._measurement == "alldata")
-            |> filter(fn: (r) => r._field == "${metric}")
-            |> aggregateWindow(every: ${interval}, fn: mean, createEmpty: false)
-            |> yield(name: "mean")
-        `;
+        const query = buildHistoricalFluxQuery(
+          influxConfig.bucket,
+          'alldata',
+          metric,
+          timeRange,
+          interval,
+          buildingTag
+        );
 
         const csvData = await queryInfluxDB(query);
-        const parsed = parseHistoricalCSV(csvData, timeRange); // Pass timeRange here
+        const parsed = parseHistoricalCSV(csvData, timeRange);
         
         setData(parsed);
         setError(null);
@@ -43,7 +44,7 @@ export function useHistoricalData(
     }
 
     fetchHistoricalData();
-  }, [metric, timeRange, interval]);
+  }, [metric, timeRange, interval, buildingTag]);
 
   return { data, loading, error };
 }
@@ -68,16 +69,13 @@ function parseHistoricalCSV(csv: string, timeRange: string): DataPoint[] {
       if (!isNaN(value) && timestamp) {
         const date = new Date(timestamp);
         
-        // Format timestamp based on time range
         let formattedTime: string;
         if (timeRange.includes('h')) {
-          // For hourly ranges, show time only
           formattedTime = date.toLocaleTimeString('en-GB', { 
             hour: '2-digit', 
             minute: '2-digit' 
           });
         } else {
-          // For daily ranges, show date and time
           formattedTime = date.toLocaleDateString('en-GB', {
             month: 'short',
             day: 'numeric',

@@ -5,31 +5,32 @@ import TimeSeriesChart from '@/components/charts/TimeSeriesChart';
 import DateRangePicker from '@/components/charts/DateRangePicker';
 import { useHistoricalData } from '@/hooks/useHistoricalData';
 
-export default function BuildingCharts() {
+interface BuildingChartsProps {
+  BuildingTag?: string;
+}
+
+export default function BuildingCharts({ BuildingTag }: BuildingChartsProps) {
   const [timeRange, setTimeRange] = useState('-24h');
 
-  // Calculate appropriate interval based on time range
   const getInterval = (range: string): string => {
     if (range === '-1h') return '1m';
     if (range === '-6h') return '5m';
     if (range === '-24h') return '15m';
     if (range === '-7d') return '1h';
     if (range === '-30d') return '6h';
-    return '1d'; // For 90 days
+    return '1d';
   };
 
   const interval = getInterval(timeRange);
 
-  const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval);
-  const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval);
-  const { data: batteryData, loading: batteryLoading } = useHistoricalData('battery', timeRange, interval);
+  const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval, BuildingTag);
+  const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval, BuildingTag);
+  const { data: batteryData, loading: batteryLoading } = useHistoricalData('battery', timeRange, interval, BuildingTag);
 
   return (
     <div>
-      {/* Date Range Picker */}
       <DateRangePicker value={timeRange} onChange={setTimeRange} />
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <TimeSeriesChart

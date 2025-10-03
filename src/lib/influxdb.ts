@@ -51,13 +51,43 @@ export interface InfluxConfig {
     bucket: string,
     measurement: string,
     field: string,
-    timeRange: string = '-2h'
+    timeRange: string = '-2h',
+    BuildingTag?: string
   ): string {
+    const BuildingFilter = BuildingTag 
+      ? `|> filter(fn: (r) => r.BuildingTag == "${BuildingTag}")` 
+      : '';
+    
     return `
       from(bucket: "${bucket}")
         |> range(start: ${timeRange})
         |> filter(fn: (r) => r._measurement == "${measurement}")
         |> filter(fn: (r) => r._field == "${field}")
+        ${BuildingFilter}
         |> last()
     `;
   }
+  
+  export function buildHistoricalFluxQuery(
+    bucket: string,
+    measurement: string,
+    field: string,
+    timeRange: string,
+    interval: string,
+    BuildingTag?: string
+  ): string {
+    const BuildingFilter = BuildingTag 
+      ? `|> filter(fn: (r) => r.BuildingTag == "${BuildingTag}")` 
+      : '';
+    
+    return `
+      from(bucket: "${bucket}")
+        |> range(start: ${timeRange})
+        |> filter(fn: (r) => r._measurement == "${measurement}")
+        |> filter(fn: (r) => r._field == "${field}")
+        ${BuildingFilter}
+        |> aggregateWindow(every: ${interval}, fn: mean, createEmpty: false)
+        |> yield(name: "mean")
+    `;
+  }
+  

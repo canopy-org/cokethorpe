@@ -5,99 +5,115 @@ export interface Building {
     coordinates: { 
       top: string; 
       left: string; 
-    }; // Position on map
+    };
+    BuildingTag?: string; // the Tag of the building in the Influx DB database
   }
   
   export const buildings: Building[] = [
     {
       id: '1',
-      name: 'Main Hall',
+      name: 'Mansion House',
       area: 2500,
-      coordinates: { top: '15%', left: '20%' }
+      coordinates: { top: '15%', left: '20%' },
+      BuildingTag: '1'
     },
     {
       id: '2',
-      name: 'Science Block',
+      name: 'Mansion Top Floor',
       area: 1800,
-      coordinates: { top: '25%', left: '45%' }
+      coordinates: { top: '25%', left: '45%' },
+      BuildingTag: '2'
     },
     {
       id: '3',
-      name: 'Sports Centre',
+      name: 'The Round House',
       area: 3200,
-      coordinates: { top: '18%', left: '70%' }
+      coordinates: { top: '18%', left: '70%' },
+      BuildingTag: '3'
     },
     {
       id: '4',
       name: 'Library',
       area: 1200,
-      coordinates: { top: '35%', left: '15%' }
+      coordinates: { top: '35%', left: '15%' },
+      BuildingTag: '4'
     },
     {
       id: '5',
       name: 'Dining Hall',
       area: 1500,
-      coordinates: { top: '40%', left: '55%' }
+      coordinates: { top: '40%', left: '55%' },
+      BuildingTag: '5'
     },
     {
       id: '6',
       name: 'Arts Building',
       area: 1400,
-      coordinates: { top: '38%', left: '80%' }
+      coordinates: { top: '38%', left: '80%' },
+      BuildingTag: '6'
     },
     {
       id: '7',
-      name: 'Admin Block',
+      name: 'Old Schoolhouse',
       area: 800,
-      coordinates: { top: '55%', left: '25%' }
+      coordinates: { top: '55%', left: '25%' },
+      BuildingTag: '7'
     },
     {
       id: '8',
-      name: 'Music School',
+      name: 'Drama',
       area: 900,
-      coordinates: { top: '52%', left: '50%' }
+      coordinates: { top: '52%', left: '50%' },
+      BuildingTag: '8'
     },
     {
       id: '9',
-      name: 'Chapel',
+      name: 'Music',
       area: 600,
-      coordinates: { top: '58%', left: '75%' }
+      coordinates: { top: '58%', left: '75%' },
+      BuildingTag: '9'
     },
     {
       id: '10',
-      name: 'Boarding House A',
+      name: 'Sports',
       area: 2000,
-      coordinates: { top: '70%', left: '18%' }
+      coordinates: { top: '70%', left: '18%' },
+      BuildingTag: '10'
     },
     {
       id: '11',
-      name: 'Boarding House B',
+      name: 'Headmaster\'s House',
       area: 2000,
-      coordinates: { top: '68%', left: '42%' }
+      coordinates: { top: '68%', left: '42%' },
+          BuildingTag: '11'
     },
     {
       id: '12',
-      name: 'Boarding House C',
+      name: 'The Shed',
       area: 2000,
-      coordinates: { top: '72%', left: '68%' }
+      coordinates: { top: '72%', left: '68%' },
+      BuildingTag: '12'
     },
     {
       id: '13',
-      name: 'Groundskeeper',
+      name: 'Pavilion',
       area: 400,
-      coordinates: { top: '82%', left: '30%' }
+      coordinates: { top: '82%', left: '30%' },
+      BuildingTag: '13'
     },
     {
       id: '14',
-      name: 'Theatre',
+      name: 'SWIFT',
       area: 1100,
-      coordinates: { top: '85%', left: '60%' }
+      coordinates: { top: '85%', left: '60%' },
+      BuildingTag: '14'
     },
     {
       id: '15',
-      name: 'Pool House',
+      name: 'Staff Room',
       area: 1600,
-      coordinates: { top: '80%', left: '85%' }
+      coordinates: { top: '80%', left: '85%' },
+      BuildingTag: '15'
     }
   ];
   

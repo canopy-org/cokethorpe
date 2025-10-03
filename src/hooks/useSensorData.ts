@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react';
 import { SensorType } from '@/types/sensor';
 import { queryInfluxDB, parseInfluxCSV, buildFluxQuery, influxConfig } from '@/lib/influxdb';
 
-export function useSensorData(metric: SensorType, updateInterval: number = 5000) {
+export function useSensorData(
+  metric: SensorType, 
+  updateInterval: number = 5000,
+  buildingTag?: string
+) {
   const [value, setValue] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +17,9 @@ export function useSensorData(metric: SensorType, updateInterval: number = 5000)
         const query = buildFluxQuery(
           influxConfig.bucket,
           'alldata',
-          metric
+          metric,
+          '-2h',
+          buildingTag
         );
 
         const csvData = await queryInfluxDB(query);
@@ -28,15 +34,11 @@ export function useSensorData(metric: SensorType, updateInterval: number = 5000)
       }
     }
 
-    // Initial fetch
     fetchData();
-    
-    // Set up interval
     const interval = setInterval(fetchData, updateInterval);
     
-    // Cleanup
     return () => clearInterval(interval);
-  }, [metric, updateInterval]);
+  }, [metric, updateInterval, buildingTag]);
 
   return { value, lastUpdate, error };
 }

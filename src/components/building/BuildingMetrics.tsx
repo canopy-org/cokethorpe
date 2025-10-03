@@ -22,10 +22,14 @@ function MetricCard({ title, value, unit, color }: MetricCardProps) {
   );
 }
 
-export default function BuildingMetrics() {
-  const { value: temperature } = useSensorData('temperature');
-  const { value: humidity } = useSensorData('humidity');
-  const { value: battery } = useSensorData('battery');
+interface BuildingMetricsProps {
+  BuildingTag?: string;
+}
+
+export default function BuildingMetrics({ BuildingTag }: BuildingMetricsProps) {
+  const { value: temperature } = useSensorData('temperature', 5000, BuildingTag);
+  const { value: humidity } = useSensorData('humidity', 5000, BuildingTag);
+  const { value: battery } = useSensorData('battery', 5000, BuildingTag);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
