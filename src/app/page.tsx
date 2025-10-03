@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SensorType } from '@/types/sensor';
 import { buildings } from '@/lib/buildings';
 import { useSensorData } from '@/hooks/useSensorData';
@@ -39,21 +39,31 @@ function BuildingMarker({
 
 export default function Home() {
   const [selectedMetric, setSelectedMetric] = useState<SensorType>('temperature');
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Mark as loaded after initial render
+    setIsLoaded(true);
+  }, []);
 
   return (
     <>
       <style jsx global>{`
         body {
-          font-family: Arial, sans-serif;
+          font-family: var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
           background: #1a1a1a;
           color: #fff;
           margin: 0;
           padding: 0;
+          overflow: hidden;
         }
         
         main {
           height: calc(100vh - 64px);
           overflow: hidden;
+          position: relative;
+          opacity: ${isLoaded ? 1 : 0};
+          transition: opacity 0.3s ease-in;
         }
         
         #container-view {
@@ -64,6 +74,9 @@ export default function Home() {
         }
         
         #container-view img {
+          position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
@@ -72,8 +85,12 @@ export default function Home() {
         
         .temp-sensor {
           position: absolute;
-          width: 80px;
-          height: 80px;
+          width: 4.5vw;
+          height: 4.5vw;
+          min-width: 50px;
+          max-width: 90px;
+          min-height: 50px;
+          max-height: 90px;
           border-radius: 50%;
           font-weight: bold;
           color: white;
@@ -87,6 +104,7 @@ export default function Home() {
           backdrop-filter: blur(3px);
           transition: all 0.3s ease;
           border: 3px solid rgba(255,255,255,0.6);
+          aspect-ratio: 1;
         }
         
         .temp-sensor:hover {
@@ -95,16 +113,26 @@ export default function Home() {
         }
         
         .building-label {
-          font-size: 11px;
+          font-size: 0.65vw;
           opacity: 0.95;
-          margin-bottom: 3px;
+          margin-bottom: 2px;
           font-weight: 600;
           text-transform: uppercase;
+          text-align: center;
+          width: 100%;
+          line-height: 1.1;
+          padding: 0 4px;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          word-break: break-word;
         }
         
         .temp-value {
-          font-size: 20px;
+          font-size: 1.1vw;
           font-weight: bold;
+          text-align: center;
         }
         
         #legend-container {
@@ -147,6 +175,25 @@ export default function Home() {
           font-size: 14px;
           cursor: pointer;
           user-select: none;
+        }
+
+        @media (max-width: 768px) {
+          .temp-sensor {
+            width: 60px;
+            height: 60px;
+            min-width: 50px;
+            max-width: 70px;
+            min-height: 50px;
+            max-height: 70px;
+          }
+          
+          .building-label {
+            font-size: 9px;
+          }
+          
+          .temp-value {
+            font-size: 14px;
+          }
         }
       `}</style>
 
