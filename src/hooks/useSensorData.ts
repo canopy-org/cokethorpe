@@ -5,7 +5,7 @@ import { queryInfluxDB, parseInfluxCSV, buildFluxQuery, influxConfig } from '@/l
 export function useSensorData(
   metric: SensorType, 
   updateInterval: number = 5000,
-  buildingTag?: string
+  deviceId?: string
 ) {
   const [value, setValue] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -19,7 +19,7 @@ export function useSensorData(
           'alldata',
           metric,
           '-2h',
-          buildingTag
+          deviceId
         );
 
         const csvData = await queryInfluxDB(query);
@@ -38,7 +38,7 @@ export function useSensorData(
     const interval = setInterval(fetchData, updateInterval);
     
     return () => clearInterval(interval);
-  }, [metric, updateInterval, buildingTag]);
+  }, [metric, updateInterval, deviceId]);
 
   return { value, lastUpdate, error };
 }

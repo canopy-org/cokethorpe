@@ -9,7 +9,7 @@ export interface InfluxConfig {
     url: process.env.NEXT_PUBLIC_INFLUX_URL || 'https://influx.gedata.uk',
     token: process.env.NEXT_PUBLIC_INFLUX_TOKEN || 'XZFvjXEqKubXQGXlYg3YOYlTjL_puyp295Ki_jrDmW8o40OaJHok09PmsFHZLpOCrwT6G_sLL3jANOiaM-pXWg==',
     org: process.env.NEXT_PUBLIC_INFLUX_ORG || 'GEData',
-    bucket: process.env.NEXT_PUBLIC_INFLUX_BUCKET || 'lora_Dulwich',
+    bucket: process.env.NEXT_PUBLIC_INFLUX_BUCKET || 'lora_peckham_pulse',
   };
   
   export async function queryInfluxDB(query: string): Promise<string> {
@@ -52,10 +52,11 @@ export interface InfluxConfig {
     measurement: string,
     field: string,
     timeRange: string = '-2h',
-    BuildingTag?: string
+    deviceId?: string
   ): string {
-    const BuildingFilter = BuildingTag 
-      ? `|> filter(fn: (r) => r.BuildingTag == "${BuildingTag}")` 
+    
+    const deviceFilter = deviceId
+      ? `|> filter(fn: (r) => r.Device == "${deviceId}")`
       : '';
     
     return `
@@ -63,7 +64,7 @@ export interface InfluxConfig {
         |> range(start: ${timeRange})
         |> filter(fn: (r) => r._measurement == "${measurement}")
         |> filter(fn: (r) => r._field == "${field}")
-        ${BuildingFilter}
+        ${deviceFilter}
         |> last()
     `;
   }
@@ -74,10 +75,11 @@ export interface InfluxConfig {
     field: string,
     timeRange: string,
     interval: string,
-    BuildingTag?: string
+    deviceId?: string
   ): string {
-    const BuildingFilter = BuildingTag 
-      ? `|> filter(fn: (r) => r.BuildingTag == "${BuildingTag}")` 
+  
+    const deviceFilter = deviceId
+      ? `|> filter(fn: (r) => r.Device == "${deviceId}")`
       : '';
     
     return `
@@ -85,9 +87,8 @@ export interface InfluxConfig {
         |> range(start: ${timeRange})
         |> filter(fn: (r) => r._measurement == "${measurement}")
         |> filter(fn: (r) => r._field == "${field}")
-        ${BuildingFilter}
+        ${deviceFilter}
         |> aggregateWindow(every: ${interval}, fn: mean, createEmpty: false)
         |> yield(name: "mean")
     `;
   }
-  

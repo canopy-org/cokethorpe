@@ -4,12 +4,13 @@ import { useState } from 'react';
 import TimeSeriesChart from '@/components/charts/TimeSeriesChart';
 import DateRangePicker from '@/components/charts/DateRangePicker';
 import { useHistoricalData } from '@/hooks/useHistoricalData';
+import { getPrimarySensorDevice } from '@/lib/buildings';
 
 interface BuildingChartsProps {
-  BuildingTag?: string;
+  buildingId: string;
 }
 
-export default function BuildingCharts({ BuildingTag }: BuildingChartsProps) {
+export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
   const [timeRange, setTimeRange] = useState('-24h');
 
   const getInterval = (range: string): string => {
@@ -23,44 +24,54 @@ export default function BuildingCharts({ BuildingTag }: BuildingChartsProps) {
 
   const interval = getInterval(timeRange);
 
-  const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval, BuildingTag);
-  const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval, BuildingTag);
-  const { data: batteryData, loading: batteryLoading } = useHistoricalData('battery', timeRange, interval, BuildingTag);
+  const tempDeviceId = getPrimarySensorDevice(buildingId, 'temperature');
+  const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
+  const waterConvDeviceId = getPrimarySensorDevice(buildingId, 'water_conv');
+
+  const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval, tempDeviceId);
+  const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval, humidityDeviceId);
+  const { data: waterConvData, loading: waterConvLoading } = useHistoricalData('water_conv', timeRange, interval, waterConvDeviceId);
 
   return (
     <div>
       <DateRangePicker value={timeRange} onChange={setTimeRange} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <TimeSeriesChart
-            data={tempData}
-            title={`Temperature (${timeRange.replace('-', 'Last ')})`}
-            unit="°C"
-            color="#e74c3c"
-            loading={tempLoading}
-          />
-        </div>
+        {tempDeviceId && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <TimeSeriesChart
+              data={tempData}
+              title={`Temperature (${timeRange.replace('-', 'Last ')})`}
+              unit="°C"
+              color="#e74c3c"
+              loading={tempLoading}
+            />
+          </div>
+        )}
 
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <TimeSeriesChart
-            data={humidityData}
-            title={`Humidity (${timeRange.replace('-', 'Last ')})`}
-            unit="%"
-            color="#3498db"
-            loading={humidityLoading}
-          />
-        </div>
+        {humidityDeviceId && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <TimeSeriesChart
+              data={humidityData}
+              title={`Humidity (${timeRange.replace('-', 'Last ')})`}
+              unit="%"
+              color="#3498db"
+              loading={humidityLoading}
+            />
+          </div>
+        )}
 
-        <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
-          <TimeSeriesChart
-            data={batteryData}
-            title={`Battery Level (${timeRange.replace('-', 'Last ')})`}
-            unit="%"
-            color="#2ecc71"
-            loading={batteryLoading}
-          />
-        </div>
+        {waterConvDeviceId && (
+          <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
+            <TimeSeriesChart
+              data={waterConvData}
+              title={`Gas Usage (${timeRange.replace('-', 'Last ')})`}
+              unit="kWh"
+              color="#f39c12"
+              loading={waterConvLoading}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

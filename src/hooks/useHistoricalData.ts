@@ -11,7 +11,7 @@ export function useHistoricalData(
   metric: SensorType, 
   timeRange: string = '-24h',
   interval: string = '15m',
-  buildingTag?: string
+  deviceId?: string
 ) {
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export function useHistoricalData(
           metric,
           timeRange,
           interval,
-          buildingTag
+          deviceId
         );
 
         const csvData = await queryInfluxDB(query);
@@ -44,7 +44,7 @@ export function useHistoricalData(
     }
 
     fetchHistoricalData();
-  }, [metric, timeRange, interval, buildingTag]);
+  }, [metric, timeRange, interval, deviceId]);
 
   return { data, loading, error };
 }

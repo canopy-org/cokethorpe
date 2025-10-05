@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { SensorType } from '@/types/sensor';
-import { buildings } from '@/lib/buildings';
+import { buildings, getPrimarySensorDevice } from '@/lib/buildings';
 import { useSensorData } from '@/hooks/useSensorData';
 import { getColorForMetric, getUnitForMetric } from '@/lib/utils';
 
@@ -13,7 +13,8 @@ function BuildingMarker({
   building: typeof buildings[0], 
   selectedMetric: SensorType 
 }) {
-  const { value } = useSensorData(selectedMetric, 5000, building.BuildingTag);
+  const deviceId = getPrimarySensorDevice(building.id, selectedMetric);
+  const { value } = useSensorData(selectedMetric, 5000, deviceId);
   
   const backgroundColor = value !== null 
     ? getColorForMetric(value, selectedMetric) 
@@ -85,8 +86,8 @@ export default function Home() {
         
         .temp-sensor {
           position: absolute;
-          width: 4.5vw;
-          height: 4.5vw;
+          width: 3.5vw;
+          height: 3.5vw;
           min-width: 50px;
           max-width: 90px;
           min-height: 50px;
@@ -113,7 +114,7 @@ export default function Home() {
         }
         
         .building-label {
-          font-size: 0.65vw;
+          font-size: 0.55vw;
           opacity: 0.95;
           margin-bottom: 2px;
           font-weight: 600;
@@ -130,7 +131,7 @@ export default function Home() {
         }
         
         .temp-value {
-          font-size: 1.1vw;
+          font-size: 0.7vw;
           font-weight: bold;
           text-align: center;
         }
