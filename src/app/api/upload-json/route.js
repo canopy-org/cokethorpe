@@ -5,7 +5,13 @@ import { NextResponse } from 'next/server';
 const sql = neon(process.env.DATABASE_URL);
 
 // Authentication middleware
+// Authentication middleware with toggle
 function authenticate(request) {
+    // Check if authentication is disabled
+    if (process.env.DISABLE_AUTH === 'true') {
+        return { authenticated: true };
+    }
+
     const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!apiKey) {
