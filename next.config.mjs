@@ -1,7 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = { 
-  outputFileTracingRoot: 'C:\\Users\\HarryTallis\\Canopy',
-  output: 'standalone',
-};
+const nextConfig = {};
 
 export default nextConfig;
