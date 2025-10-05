@@ -12,7 +12,7 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, unit, color }: MetricCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 border-l-4" style={{ borderLeftColor: color || '#95a5a6' }}>
+    <div className="bg-white/50 rounded-lg shadow-lg p-6 border-l-4" style={{ borderLeftColor: color || '#95a5a6' }}>
       <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wide">{title}</h3>
       <p className="text-4xl font-bold mt-3" style={{ color: color || '#333' }}>
         {value !== null ? value.toFixed(1) : '--'}

@@ -26,7 +26,7 @@ function BuildingMarker({
       style={{
         top: building.coordinates.top, 
         left: building.coordinates.left,
-        backgroundColor: backgroundColor
+        backgroundColor: backgroundColor,
       }}
     >
       <div className="building-label">{building.name}</div>

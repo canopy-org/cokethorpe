@@ -9,7 +9,7 @@ export interface InfluxConfig {
     url: process.env.NEXT_PUBLIC_INFLUX_URL || 'https://influx.gedata.uk',
     token: process.env.NEXT_PUBLIC_INFLUX_TOKEN || 'XZFvjXEqKubXQGXlYg3YOYlTjL_puyp295Ki_jrDmW8o40OaJHok09PmsFHZLpOCrwT6G_sLL3jANOiaM-pXWg==',
     org: process.env.NEXT_PUBLIC_INFLUX_ORG || 'GEData',
-    bucket: process.env.NEXT_PUBLIC_INFLUX_BUCKET || 'lora_peckham_pulse',
+    bucket: process.env.NEXT_PUBLIC_INFLUX_BUCKET || 'lora_Dulwich',
   };
   
   export async function queryInfluxDB(query: string): Promise<string> {
