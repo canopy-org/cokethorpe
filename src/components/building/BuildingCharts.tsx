@@ -26,11 +26,11 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
 
   const tempDeviceId = getPrimarySensorDevice(buildingId, 'temperature');
   const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
-  const waterConvDeviceId = getPrimarySensorDevice(buildingId, 'water_conv');
+  const pulseDeviceId = getPrimarySensorDevice(buildingId, 'water');
 
   const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval, tempDeviceId);
   const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval, humidityDeviceId);
-  const { data: waterConvData, loading: waterConvLoading } = useHistoricalData('water_conv', timeRange, interval, waterConvDeviceId);
+  const { data: pulseData, loading: pulseLoading } = useHistoricalData('water', timeRange, interval, pulseDeviceId);
 
   return (
     <div>
@@ -61,14 +61,14 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
           </div>
         )}
 
-        {waterConvDeviceId && (
+        {pulseDeviceId && (
           <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
             <TimeSeriesChart
-              data={waterConvData}
+              data={pulseData}
               title={`Gas Usage (${timeRange.replace('-', 'Last ')})`}
               unit="kWh"
               color="#f39c12"
-              loading={waterConvLoading}
+              loading={pulseLoading}
             />
           </div>
         )}

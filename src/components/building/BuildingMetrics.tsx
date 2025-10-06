@@ -32,14 +32,13 @@ export default function BuildingMetrics({ buildingId }: BuildingMetricsProps) {
   const tempDeviceId = getPrimarySensorDevice(buildingId, 'temperature');
   const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
   const batteryDeviceId = getPrimarySensorDevice(buildingId, 'battery');
-  const waterDeviceId = getPrimarySensorDevice(buildingId, 'water');
-  const waterConvDeviceId = getPrimarySensorDevice(buildingId, 'water_conv');
+  const pulseDeviceId = getPrimarySensorDevice(buildingId, 'water');
 
   const { value: temperature } = useSensorData('temperature', 5000, tempDeviceId);
   const { value: humidity } = useSensorData('humidity', 5000, humidityDeviceId);
   const { value: battery } = useSensorData('battery', 5000, batteryDeviceId);
-  const { value: water } = useSensorData('water', 5000, waterDeviceId);
-  const { value: waterConv } = useSensorData('water_conv', 5000, waterConvDeviceId);
+  const { value: water } = useSensorData('water', 5000, pulseDeviceId);
+ 
 
   // Build array of metrics to display (only show if device exists)
   const metrics = [];
@@ -62,12 +61,12 @@ export default function BuildingMetrics({ buildingId }: BuildingMetricsProps) {
     });
   }
   
-  if (waterConvDeviceId) {
+  if (pulseDeviceId) {
     metrics.push({
       title: 'Gas Usage',
-      value: waterConv,
+      value: water,
       unit: 'kWh',
-      color: waterConv !== null ? getColorForMetric(waterConv, 'water_conv') : undefined
+      color: water !== null ? getColorForMetric(water, 'water') : undefined
     });
   }
   
