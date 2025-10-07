@@ -14,32 +14,104 @@ function BuildingMarker({
   building: typeof buildings[0], 
   selectedMetric: SensorType 
 }) {
-  const deviceId = getPrimarySensorDevice(building.id, selectedMetric);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Get all sensor device IDs
+  const tempDeviceId = getPrimarySensorDevice(building.id, 'temperature');
+  const humidityDeviceId = getPrimarySensorDevice(building.id, 'humidity');
+  const batteryDeviceId = getPrimarySensorDevice(building.id, 'battery');
   const energyDeviceId = getPrimarySensorDevice(building.id, 'energy');
 
-  const { value: genericValue } = useSensorData(selectedMetric, 5000, deviceId);
-  const { value: energyValue } = useEnergyData(building.id, energyDeviceId, 5000);
+  // Fetch all metrics
+  const { value: temperature } = useSensorData('temperature', 5000, tempDeviceId);
+  const { value: humidity } = useSensorData('humidity', 5000, humidityDeviceId);
+  const { value: battery } = useSensorData('battery', 5000, batteryDeviceId);
+  const { value: energyNormalized } = useEnergyData(building.id, energyDeviceId, 5000, 'normalized');
+  const { value: energyRate } = useEnergyData(building.id, energyDeviceId, 5000, 'power');
 
-  const value = selectedMetric === 'energy' ? energyValue : genericValue;
+  // Get the value to display based on selected metric
+  let displayValue: number | null = null;
+  if (selectedMetric === 'temperature') displayValue = temperature;
+  else if (selectedMetric === 'humidity') displayValue = humidity;
+  else if (selectedMetric === 'energy') displayValue = energyNormalized;
+  else if (selectedMetric === 'battery') displayValue = battery;
 
-  const backgroundColor = value !== null 
-    ? getColorForMetric(value, selectedMetric) 
+  const backgroundColor = displayValue !== null 
+    ? getColorForMetric(displayValue, selectedMetric) 
     : '#95a5a6';
-  const unit = getUnitForMetric(selectedMetric);
+  
+  // Get appropriate unit based on metric
+  let unit = getUnitForMetric(selectedMetric);
+  if (selectedMetric === 'energy') {
+    unit = 'kWh/m²';
+  }
 
   return (
     <div 
-      className="temp-sensor" 
+      className="building-marker-container"
       style={{
         top: building.coordinates.top, 
         left: building.coordinates.left,
-        backgroundColor: backgroundColor,
       }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
     >
-      <div className="building-label">{building.name}</div>
-      <div className="temp-value">
-        {value !== null ? value.toFixed(1) : '--'}{unit}
+      <div 
+        className="temp-sensor" 
+        style={{
+          backgroundColor: backgroundColor,
+        }}
+      >
+        <div className="temp-value">
+          {displayValue !== null ? (
+            selectedMetric === 'energy' ? displayValue.toFixed(0) : displayValue.toFixed(1)
+          ) : '--'}
+        </div>
+        <div className="temp-unit">{unit}</div>
       </div>
+
+      {/* Hover Tooltip */}
+      {showTooltip && (
+        <div className="building-tooltip">
+          <div className="tooltip-header">{building.name}</div>
+          <div className="tooltip-divider"></div>
+          <div className="tooltip-content">
+            {tempDeviceId && temperature !== null && (
+              <div className="tooltip-row">
+                <span className="tooltip-label">Temperature:</span>
+                <span className="tooltip-value">{temperature.toFixed(1)}°C</span>
+              </div>
+            )}
+            {humidityDeviceId && humidity !== null && (
+              <div className="tooltip-row">
+                <span className="tooltip-label">Humidity:</span>
+                <span className="tooltip-value">{humidity.toFixed(1)}%</span>
+              </div>
+            )}
+            {energyDeviceId && energyNormalized !== null && (
+              <div className="tooltip-row">
+                <span className="tooltip-label">Energy (norm):</span>
+                <span className="tooltip-value">{energyNormalized.toFixed(0)} kWh/m²</span>
+              </div>
+            )}
+            {energyDeviceId && energyRate !== null && (
+              <div className="tooltip-row">
+                <span className="tooltip-label">Current Power:</span>
+                <span className="tooltip-value">{energyRate.toFixed(0)} kW</span>
+              </div>
+            )}
+            {batteryDeviceId && battery !== null && (
+              <div className="tooltip-row">
+                <span className="tooltip-label">Battery:</span>
+                <span className="tooltip-value">{battery.toFixed(0)}%</span>
+              </div>
+            )}
+            <div className="tooltip-footer">
+              <span className="tooltip-area">Area: {building.area.toLocaleString()}m²</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -49,7 +121,6 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Mark as loaded after initial render
     setIsLoaded(true);
   }, []);
 
@@ -89,14 +160,23 @@ export default function Home() {
           object-fit: cover;
           display: block;
         }
+
+        .building-marker-container {
+          position: absolute;
+          transform: translate(-50%, -50%);
+          z-index: 10;
+        }
+
+        .building-marker-container:hover {
+          z-index: 9999;
+        }
         
         .temp-sensor {
-          position: absolute;
           width: 3.5vw;
           height: 3.5vw;
-          min-width: 50px;
+          min-width: 60px;
           max-width: 90px;
-          min-height: 50px;
+          min-height: 60px;
           max-height: 90px;
           border-radius: 50%;
           font-weight: bold;
@@ -107,39 +187,157 @@ export default function Home() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          transform: translate(-50%, -50%);
           backdrop-filter: blur(3px);
           transition: all 0.3s ease;
           border: 3px solid rgba(255,255,255,0.6);
           aspect-ratio: 1;
+          cursor: pointer;
+          padding: 8px;
         }
         
-        .temp-sensor:hover {
-          transform: translate(-50%, -50%) scale(1.1);
-          box-shadow: 0 6px 20px rgba(255,255,255,0.6);
-        }
-        
-        .building-label {
-          font-size: 0.55vw;
-          opacity: 0.95;
-          margin-bottom: 2px;
-          font-weight: 600;
-          text-transform: uppercase;
-          text-align: center;
-          width: 100%;
-          line-height: 1.1;
-          padding: 0 4px;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          word-break: break-word;
+        .building-marker-container:hover .temp-sensor {
+          transform: scale(1.15);
+          box-shadow: 0 6px 25px rgba(255,255,255,0.7);
+          border-width: 4px;
+          z-index: 20;
         }
         
         .temp-value {
-          font-size: 0.7vw;
+          font-size: 1.1vw;
+          min-font-size: 16px;
           font-weight: bold;
           text-align: center;
+          line-height: 1.1;
+          margin-bottom: 2px;
+        }
+
+        .temp-unit {
+          font-size: 0.6vw;
+          min-font-size: 10px;
+          opacity: 0.95;
+          font-weight: 600;
+          text-align: center;
+          line-height: 1;
+          
+        }
+
+        /* Tooltip Styles */
+        .building-tooltip {
+          position: absolute;
+          top: 50%;
+          left: calc(100% + 15px);
+          transform: translateY(-50%);
+          background: rgba(30, 41, 59, 0.98);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 12px;
+          padding: 0;
+          min-width: 220px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+          z-index: 10000;
+          animation: tooltipFadeIn 0.2s ease-out;
+          backdrop-filter: blur(10px);
+          pointer-events: none;
+        }
+
+        @keyframes tooltipFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-50%) translateX(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+          }
+        }
+
+        .tooltip-header {
+          font-size: 16px;
+          font-weight: 700;
+          color: #fff;
+          padding: 12px 16px;
+          background: rgba(59, 130, 246, 0.2);
+          border-radius: 10px 10px 0 0;
+          text-align: center;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-divider {
+          height: 1px;
+          background: linear-gradient(
+            to right,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+          );
+          margin: 0;
+        }
+
+        .tooltip-content {
+          padding: 12px 16px;
+        }
+
+        .tooltip-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 6px 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tooltip-row:last-of-type {
+          border-bottom: none;
+        }
+
+        .tooltip-label {
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.7);
+          font-weight: 500;
+        }
+
+        .tooltip-value {
+          font-size: 14px;
+          color: #fff;
+          font-weight: 600;
+          text-align: right;
+        }
+
+        .tooltip-footer {
+          margin-top: 8px;
+          padding-top: 8px;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-area {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.6);
+          font-style: italic;
+        }
+
+        /* Arrow pointer for tooltip */
+        .building-tooltip::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: -10px;
+          transform: translateY(-50%);
+          width: 0;
+          height: 0;
+          border-style: solid;
+          border-width: 8px 10px 8px 0;
+          border-color: transparent rgba(255, 255, 255, 0.3) transparent transparent;
+        }
+
+        .building-tooltip::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: -7px;
+          transform: translateY(-50%);
+          width: 0;
+          height: 0;
+          border-style: solid;
+          border-width: 7px 9px 7px 0;
+          border-color: transparent rgba(30, 41, 59, 0.98) transparent transparent;
         }
         
         #legend-container {
@@ -188,18 +386,29 @@ export default function Home() {
           .temp-sensor {
             width: 60px;
             height: 60px;
-            min-width: 50px;
-            max-width: 70px;
-            min-height: 50px;
-            max-height: 70px;
-          }
-          
-          .building-label {
-            font-size: 9px;
+            min-width: 55px;
+            max-width: 65px;
+            min-height: 55px;
+            max-height: 65px;
+            padding: 6px;
           }
           
           .temp-value {
+            font-size: 16px;
+          }
+          
+          .temp-unit {
+            font-size: 10px;
+          }
+
+          .building-tooltip {
+            min-width: 200px;
+            font-size: 12px;
+          }
+
+          .tooltip-header {
             font-size: 14px;
+            padding: 10px 12px;
           }
         }
       `}</style>
@@ -237,7 +446,7 @@ export default function Home() {
             checked={selectedMetric === 'energy'}
             onChange={(e) => setSelectedMetric(e.target.value as SensorType)}
           />
-          <label htmlFor="energy-radio">Energy</label>
+          <label htmlFor="energy-radio">Energy (kWh/m²)</label>
         </div>
       </div>
 

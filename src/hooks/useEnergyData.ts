@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { queryInfluxDB, parseInfluxCSV, buildFluxQuery, influxConfig } from '@/lib/influxdb';
-import { getDeviceConversionFactor } from '@/lib/buildings';
+import { queryInfluxDB, parseInfluxCSV, buildFluxQuery, buildRateFluxQuery, influxConfig } from '@/lib/influxdb';
+import { getDeviceConversionFactor, getBuildingById } from '@/lib/buildings';
+
+export type EnergyCalculationType = 'cumulative' | 'power' | 'normalized';
 
 export function useEnergyData(
   buildingId: string,
   deviceId?: string,
-  updateInterval: number = 5000
+  updateInterval: number = 5000,
+  calculationType: EnergyCalculationType = 'cumulative'
 ) {
   const [value, setValue] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -20,14 +23,28 @@ export function useEnergyData(
     async function fetchData() {
       if (!deviceId) return;
       try {
-        // Query the 'water' field from InfluxDB (pulse count)
-        const query = buildFluxQuery(
-          influxConfig.bucket,
-          'alldata',
-          'water',  // Query 'water' field from InfluxDB
-          '-2h',
-          deviceId
-        );
+        let query: string;
+        
+        if (calculationType === 'power') {
+          // For rate calculation, get difference between consecutive readings
+          query = buildRateFluxQuery(
+            influxConfig.bucket,
+            'alldata',
+            'water',
+            '-2h',
+            '1h', // 1 hour window for power calculation
+            deviceId
+          );
+        } else {
+          // For cumulative and normalized, get the latest value
+          query = buildFluxQuery(
+            influxConfig.bucket,
+            'alldata',
+            'water',
+            '-2h',
+            deviceId
+          );
+        }
 
         const csvData = await queryInfluxDB(query);
         const pulseValue = parseInfluxCSV(csvData);
@@ -35,7 +52,16 @@ export function useEnergyData(
         if (pulseValue !== null) {
           // Convert pulses to energy using device-specific conversion factor
           const conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
-          const energyValue = pulseValue * conversionFactor;
+          let energyValue = pulseValue * conversionFactor;
+          
+          // If normalized, divide by building area
+          if (calculationType === 'normalized') {
+            const building = getBuildingById(buildingId);
+            if (building && building.area > 0) {
+              energyValue = energyValue / building.area;
+            }
+          }
+          
           setValue(energyValue);
         } else {
           setValue(null);
@@ -53,7 +79,7 @@ export function useEnergyData(
     const interval = setInterval(fetchData, updateInterval);
     
     return () => clearInterval(interval);
-  }, [buildingId, deviceId, updateInterval]);
+  }, [buildingId, deviceId, updateInterval, calculationType]);
 
   return { value, lastUpdate, error };
 }

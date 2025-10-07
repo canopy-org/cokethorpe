@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { queryInfluxDB, buildHistoricalFluxQuery, influxConfig } from '@/lib/influxdb';
-import { getDeviceConversionFactor } from '@/lib/buildings';
+import { queryInfluxDB, buildHistoricalFluxQuery, buildHistoricalRateFluxQuery, influxConfig } from '@/lib/influxdb';
+import { getDeviceConversionFactor, getBuildingById } from '@/lib/buildings';
+
+export type EnergyCalculationType = 'cumulative' | 'rate' | 'normalized';
 
 interface DataPoint {
   timestamp: string;
@@ -11,7 +13,8 @@ export function useHistoricalEnergyData(
   buildingId: string,
   timeRange: string = '-24h',
   interval: string = '15m',
-  deviceId?: string
+  deviceId?: string,
+  calculationType: EnergyCalculationType = 'cumulative'
 ) {
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,25 +31,50 @@ export function useHistoricalEnergyData(
       if (!deviceId) return;
       setLoading(true);
       try {
-        // Query 'water' field from InfluxDB
-        const query = buildHistoricalFluxQuery(
-          influxConfig.bucket,
-          'alldata',
-          'water',  // Query 'water' field
-          timeRange,
-          interval,
-          deviceId
-        );
+        let query: string;
+        
+        if (calculationType === 'rate') {
+          // For rate calculation, use difference between readings
+          query = buildHistoricalRateFluxQuery(
+            influxConfig.bucket,
+            'alldata',
+            'water',
+            timeRange,
+            interval,
+            deviceId
+          );
+        } else {
+          // For cumulative and normalized, use mean aggregation
+          query = buildHistoricalFluxQuery(
+            influxConfig.bucket,
+            'alldata',
+            'water',
+            timeRange,
+            interval,
+            deviceId
+          );
+        }
 
         const csvData = await queryInfluxDB(query);
         const parsed = parseHistoricalCSV(csvData, timeRange);
         
         // Convert all values using conversion factor
         const conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
-        const convertedData = parsed.map(point => ({
+        let convertedData = parsed.map(point => ({
           timestamp: point.timestamp,
           value: point.value * conversionFactor
         }));
+        
+        // If normalized, divide by building area
+        if (calculationType === 'normalized') {
+          const building = getBuildingById(buildingId);
+          if (building && building.area > 0) {
+            convertedData = convertedData.map(point => ({
+              timestamp: point.timestamp,
+              value: point.value / building.area
+            }));
+          }
+        }
         
         setData(convertedData);
         setError(null);
@@ -59,7 +87,7 @@ export function useHistoricalEnergyData(
     }
 
     fetchHistoricalData();
-  }, [buildingId, timeRange, interval, deviceId]);
+  }, [buildingId, timeRange, interval, deviceId, calculationType]);
 
   return { data, loading, error };
 }

@@ -37,7 +37,14 @@ export default function BuildingMetrics({ buildingId }: BuildingMetricsProps) {
   const { value: temperature } = useSensorData('temperature', 5000, tempDeviceId);
   const { value: humidity } = useSensorData('humidity', 5000, humidityDeviceId);
   const { value: battery } = useSensorData('battery', 5000, batteryDeviceId);
-  const { value: energy } = useEnergyData(buildingId, energyDeviceId, 5000); // Uses energy hook
+  
+  // Use 'rate' calculation type for building page to show energy per time interval
+  const { value: energy } = useEnergyData(
+    buildingId, 
+    energyDeviceId, 
+    5000,
+    'power' // This will show kWh consumed in the last interval (not cumulative)
+  );
 
   const metrics = [];
   
@@ -61,9 +68,9 @@ export default function BuildingMetrics({ buildingId }: BuildingMetricsProps) {
   
   if (energyDeviceId) {
     metrics.push({
-      title: 'Energy Usage',
+      title: 'Power (last hour)',
       value: energy,
-      unit: 'kWh',
+      unit: 'kW',
       color: '#f39c12'
     });
   }

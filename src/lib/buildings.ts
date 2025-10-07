@@ -101,7 +101,7 @@ export const buildings: Building[] = [
     id: '3',
     name: 'The Round House',
     area: 3200,
-    coordinates: { top: '60%', left: '67%' },
+    coordinates: { top: '61%', left: '67%' },
     devices: [
       { 
         deviceId: 'PC-02', 
@@ -209,7 +209,7 @@ export const buildings: Building[] = [
     id: '7',
     name: 'Old Schoolhouse',
     area: 800,
-    coordinates: { top: '65%', left: '67%' },
+    coordinates: { top: '70%', left: '67%' },
     devices: [
       { 
         deviceId: 'PC-02', 

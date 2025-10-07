@@ -31,7 +31,15 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
 
   const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval, tempDeviceId);
   const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval, humidityDeviceId);
-  const { data: energyData, loading: energyLoading } = useHistoricalEnergyData(buildingId, timeRange, interval, energyDeviceId);
+  
+  // Use 'rate' calculation type for charts to show energy consumption per time interval
+  const { data: energyData, loading: energyLoading } = useHistoricalEnergyData(
+    buildingId, 
+    timeRange, 
+    interval, 
+    energyDeviceId,
+    'rate' // This will show kWh consumed in each interval (not cumulative)
+  );
 
   return (
     <div>
@@ -66,7 +74,7 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
           <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
             <TimeSeriesChart
               data={energyData}
-              title={`Energy Usage (${timeRange.replace('-', 'Last ')})`}
+              title={`Energy Consumption per ${interval} (${timeRange.replace('-', 'Last ')})`}
               unit="kWh"
               color="#f39c12"
               loading={energyLoading}
