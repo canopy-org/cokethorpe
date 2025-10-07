@@ -15,10 +15,10 @@ export function getHumidityColor(humidity: number): string {
   return 'rgba(52, 152, 219, 0.7)';                      // Too humid - Blue
 }
 
-export function getBatteryColor(battery: number): string {
-  if (battery < 20) return 'rgba(231, 76, 60, 0.7)';     // Critical - Red
-  if (battery < 40) return 'rgba(243, 156, 18, 0.7)';    // Low - Amber
-  if (battery < 80) return 'rgba(46, 204, 113, 0.7)';    // Good - Green
+export function getEnergyColor(energy: number): string {
+  if (energy > 150) return 'rgba(231, 76, 60, 0.7)';     // Critical - Red
+  if (energy > 100) return 'rgba(243, 156, 18, 0.7)';    // Low - Amber
+  if (energy > 70) return 'rgba(46, 204, 113, 0.7)';    // Good - Green
   return 'rgba(39, 174, 96, 0.7)';                       // Full - Dark Green
 }
 
@@ -28,8 +28,8 @@ export function getColorForMetric(value: number, metric: SensorType): string {
       return getTemperatureColor(value);
     case 'humidity':
       return getHumidityColor(value);
-    case 'battery':
-      return getBatteryColor(value);
+    case 'energy':
+      return getEnergyColor(value);
     default:
       return 'rgba(149, 165, 166, 0.5)';
   }
@@ -40,8 +40,8 @@ export function getUnitForMetric(metric: SensorType): string {
     case 'temperature':
       return '°C';
     case 'humidity':
-    case 'battery':
-      return '%';
+    case 'energy':
+      return 'kWh';
     default:
       return '';
   }

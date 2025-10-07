@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { SensorType } from '@/types/sensor';
 import { buildings, getPrimarySensorDevice } from '@/lib/buildings';
 import { useSensorData } from '@/hooks/useSensorData';
+import { useEnergyData } from '@/hooks/useEnergyData';
 import { getColorForMetric, getUnitForMetric } from '@/lib/utils';
 
 function BuildingMarker({ 
@@ -14,8 +15,13 @@ function BuildingMarker({
   selectedMetric: SensorType 
 }) {
   const deviceId = getPrimarySensorDevice(building.id, selectedMetric);
-  const { value } = useSensorData(selectedMetric, 5000, deviceId);
-  
+  const energyDeviceId = getPrimarySensorDevice(building.id, 'energy');
+
+  const { value: genericValue } = useSensorData(selectedMetric, 5000, deviceId);
+  const { value: energyValue } = useEnergyData(building.id, energyDeviceId, 5000);
+
+  const value = selectedMetric === 'energy' ? energyValue : genericValue;
+
   const backgroundColor = value !== null 
     ? getColorForMetric(value, selectedMetric) 
     : '#95a5a6';
@@ -225,13 +231,13 @@ export default function Home() {
         <div className="legend-option">
           <input 
             type="radio" 
-            id="battery-radio" 
+            id="energy-radio" 
             name="metric" 
-            value="battery"
-            checked={selectedMetric === 'battery'}
+            value="energy"
+            checked={selectedMetric === 'energy'}
             onChange={(e) => setSelectedMetric(e.target.value as SensorType)}
           />
-          <label htmlFor="battery-radio">Battery</label>
+          <label htmlFor="energy-radio">Energy</label>
         </div>
       </div>
 

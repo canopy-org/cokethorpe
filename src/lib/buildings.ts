@@ -27,6 +27,7 @@ export interface Device {
   type: DeviceType;
   location?: string;
   sensors?: string[]; // Auto-populated from type, but can override if needed
+  conversionFactor?: number // kWh/pulse conversion factor for gas/oil meters. only pulse counter devices need this line
 }
 
 export interface Building {
@@ -52,7 +53,8 @@ export const buildings: Building[] = [
         deviceId: 'uncategorised', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'uncategorised', 
@@ -77,19 +79,22 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
+    
     }
   },
   {
@@ -102,19 +107,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -127,19 +134,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -152,19 +161,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -177,19 +188,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -202,19 +215,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -227,19 +242,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -252,19 +269,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -277,19 +296,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -302,19 +323,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -327,19 +350,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -352,19 +377,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -377,19 +404,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -402,19 +431,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   },
   {
@@ -427,19 +458,21 @@ export const buildings: Building[] = [
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
       { 
         deviceId: 'PC-02', 
         name: 'Mansion House - Main',
         type: 'EM300-DI',
-        location: 'Main Hall'
+        location: 'Main Hall',
+        conversionFactor: 1
       },
     ],
     primarySensors: {
-      temperature: 'PC-02',
-      humidity: 'PC-02',
-      energy: 'PC-02',
+      temperature: 'uncategorised',
+      humidity: 'uncategorised',
+      energy: 'uncategorised',
     }
   }
 ];
@@ -478,4 +511,11 @@ export function getDeviceSensors(device: Device): string[] {
 export function deviceHasSensor(device: Device, sensorType: string): boolean {
   const sensors = getDeviceSensors(device);
   return sensors.includes(sensorType);
+}
+
+// Helper to get conversion factor for a device
+export function getDeviceConversionFactor(buildingId: string, deviceId: string): number {
+  const building = getBuildingById(buildingId);
+  const device = building?.devices.find(d => d.deviceId === deviceId);
+  return device?.conversionFactor || 1; // Default to 1 if no conversion needed
 }

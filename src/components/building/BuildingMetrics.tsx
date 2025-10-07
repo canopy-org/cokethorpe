@@ -1,6 +1,7 @@
 'use client';
 
 import { useSensorData } from '@/hooks/useSensorData';
+import { useEnergyData } from '@/hooks/useEnergyData';
 import { getColorForMetric } from '@/lib/utils';
 import { getPrimarySensorDevice } from '@/lib/buildings';
 
@@ -25,22 +26,19 @@ function MetricCard({ title, value, unit, color }: MetricCardProps) {
 
 interface BuildingMetricsProps {
   buildingId: string;
-
 }
 
 export default function BuildingMetrics({ buildingId }: BuildingMetricsProps) {
   const tempDeviceId = getPrimarySensorDevice(buildingId, 'temperature');
   const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
   const batteryDeviceId = getPrimarySensorDevice(buildingId, 'battery');
-  const pulseDeviceId = getPrimarySensorDevice(buildingId, 'water');
+  const energyDeviceId = getPrimarySensorDevice(buildingId, 'energy');
 
   const { value: temperature } = useSensorData('temperature', 5000, tempDeviceId);
   const { value: humidity } = useSensorData('humidity', 5000, humidityDeviceId);
   const { value: battery } = useSensorData('battery', 5000, batteryDeviceId);
-  const { value: water } = useSensorData('water', 5000, pulseDeviceId);
- 
+  const { value: energy } = useEnergyData(buildingId, energyDeviceId, 5000); // Uses energy hook
 
-  // Build array of metrics to display (only show if device exists)
   const metrics = [];
   
   if (tempDeviceId) {
@@ -61,12 +59,12 @@ export default function BuildingMetrics({ buildingId }: BuildingMetricsProps) {
     });
   }
   
-  if (pulseDeviceId) {
+  if (energyDeviceId) {
     metrics.push({
-      title: 'Gas Usage',
-      value: water,
+      title: 'Energy Usage',
+      value: energy,
       unit: 'kWh',
-      color: water !== null ? getColorForMetric(water, 'water') : undefined
+      color: '#f39c12'
     });
   }
   
@@ -79,7 +77,6 @@ export default function BuildingMetrics({ buildingId }: BuildingMetricsProps) {
     });
   }
 
-  // Determine grid columns based on number of metrics
   const gridCols = metrics.length === 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 
                    metrics.length === 3 ? 'md:grid-cols-3' :
                    metrics.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-1';

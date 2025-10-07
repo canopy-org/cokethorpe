@@ -4,6 +4,7 @@ import { useState } from 'react';
 import TimeSeriesChart from '@/components/charts/TimeSeriesChart';
 import DateRangePicker from '@/components/charts/DateRangePicker';
 import { useHistoricalData } from '@/hooks/useHistoricalData';
+import { useHistoricalEnergyData } from '@/hooks/useHistoricalEnergyData';
 import { getPrimarySensorDevice } from '@/lib/buildings';
 
 interface BuildingChartsProps {
@@ -26,11 +27,11 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
 
   const tempDeviceId = getPrimarySensorDevice(buildingId, 'temperature');
   const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
-  const pulseDeviceId = getPrimarySensorDevice(buildingId, 'water');
+  const energyDeviceId = getPrimarySensorDevice(buildingId, 'energy');
 
   const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval, tempDeviceId);
   const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval, humidityDeviceId);
-  const { data: pulseData, loading: pulseLoading } = useHistoricalData('water', timeRange, interval, pulseDeviceId);
+  const { data: energyData, loading: energyLoading } = useHistoricalEnergyData(buildingId, timeRange, interval, energyDeviceId);
 
   return (
     <div>
@@ -61,14 +62,14 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
           </div>
         )}
 
-        {pulseDeviceId && (
+        {energyDeviceId && (
           <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
             <TimeSeriesChart
-              data={pulseData}
-              title={`Gas Usage (${timeRange.replace('-', 'Last ')})`}
+              data={energyData}
+              title={`Energy Usage (${timeRange.replace('-', 'Last ')})`}
               unit="kWh"
               color="#f39c12"
-              loading={pulseLoading}
+              loading={energyLoading}
             />
           </div>
         )}
