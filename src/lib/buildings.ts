@@ -189,7 +189,7 @@ export const buildings: Building[] = [
     coordinates: { top: '65%', left: '67%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'Old Schoolhouse - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -210,7 +210,7 @@ export const buildings: Building[] = [
     coordinates: { top: '52%', left: '60%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'Medical - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -231,7 +231,7 @@ export const buildings: Building[] = [
     coordinates: { top: '55%', left: '48%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'Music - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -252,7 +252,7 @@ export const buildings: Building[] = [
     coordinates: { top: '34%', left: '20%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'Sports - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -273,7 +273,7 @@ export const buildings: Building[] = [
     coordinates: { top: '45%', left: '32%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'Vanbrugh - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -294,7 +294,7 @@ export const buildings: Building[] = [
     coordinates: { top: '29%', left: '27%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'The Shed - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -315,7 +315,7 @@ export const buildings: Building[] = [
     coordinates: { top: '35%', left: '70%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'Pavilion - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -336,11 +336,11 @@ export const buildings: Building[] = [
     coordinates: { top: '52%', left: '38%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'SWIFT - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
-        conversionFactor: 1,
+        conversionFactor: 0.1,
         energyType: 'gas'
       },
     ],
@@ -357,11 +357,11 @@ export const buildings: Building[] = [
     coordinates: { top: '59%', left: '59%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'Staff Room - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
-        conversionFactor: 1,
+        conversionFactor: 3,
         energyType: 'gas'
       },
     ],
@@ -378,11 +378,11 @@ export const buildings: Building[] = [
     coordinates: { top: '41%', left: '41%' },
     devices: [
       { 
-        deviceId: 'PC-02', 
+        deviceId: 'uncategorised', 
         name: 'IT - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
-        conversionFactor: 1,
+        conversionFactor: 2,
         energyType: 'gas'
       },
     ],

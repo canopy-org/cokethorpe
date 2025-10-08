@@ -105,13 +105,20 @@ function BuildingComparisonChart({
   useEffect(() => {
     if (!chartRef.current) return;
 
-    // Initialize chart
+    // Initialize chart only once
     if (!chartInstance.current) {
       chartInstance.current = echarts.init(chartRef.current);
     }
 
     // Filter out null values and prepare data
-    const validData = data.filter(d => d.gasUsage !== null);
+    const validData = data.filter(d => d.gasUsage !== null && d.gasUsage > 0);
+    
+    if (validData.length === 0) {
+      // Clear the chart if no data
+      chartInstance.current.clear();
+      return;
+    }
+
     const buildingNames = validData.map(d => d.buildingName);
     const gasValues = validData.map(d => d.gasUsage || 0);
 
@@ -186,7 +193,7 @@ function BuildingComparisonChart({
       ]
     };
 
-    chartInstance.current.setOption(option);
+    chartInstance.current.setOption(option, true); // true = notMerge, replace all options
 
     // Handle window resize
     const handleResize = () => {
@@ -199,23 +206,46 @@ function BuildingComparisonChart({
     };
   }, [data, timeRange]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount ONLY
   useEffect(() => {
     return () => {
-      chartInstance.current?.dispose();
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
+        chartInstance.current = null;
+      }
     };
   }, []);
 
-  if (data.length === 0 || data.every(d => d.gasUsage === null)) {
+  // Check if we have any valid data
+  const validData = data.filter(d => d.gasUsage !== null && d.gasUsage > 0);
+
+  if (data.length === 0 || validData.length === 0) {
     return (
-      <div className="h-[600px] flex items-center justify-center bg-gray-50 rounded">
-        <p className="text-gray-400">No gas usage data available</p>
+      <div className="h-[600px] flex items-center justify-center bg-gray-50 rounded border-2 border-gray-200">
+        <div className="text-center p-6">
+          <div className="text-6xl mb-4">📊</div>
+          <p className="text-gray-600 font-semibold mb-2">No Gas Usage Data Available</p>
+          <p className="text-gray-500 text-sm">
+            {data.length === 0 
+              ? 'No buildings configured' 
+              : `${data.length} buildings found, but no gas usage data for the selected period`}
+          </p>
+          <p className="text-gray-400 text-xs mt-2">Try selecting a different time period</p>
+        </div>
       </div>
     );
   }
 
-  return <div ref={chartRef} style={{ width: '100%', height: '600px' }} />;
+  return (
+    <div>
+      <div className="mb-2 text-sm text-gray-600">
+        Showing {validData.length} of {data.length} buildings with gas usage data
+      </div>
+      <div ref={chartRef} style={{ width: '100%', height: '600px' }} />
+    </div>
+  );
 }
+
 
 export default function SiteDataPage() {
   const [timeRange, setTimeRange] = useState('-24h');
