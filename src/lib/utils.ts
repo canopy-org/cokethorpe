@@ -40,6 +40,7 @@ export function getUnitForMetric(metric: SensorType): string {
     case 'temperature':
       return '°C';
     case 'humidity':
+      return '%';
     case 'energy':
       return 'kWh';
     default:
