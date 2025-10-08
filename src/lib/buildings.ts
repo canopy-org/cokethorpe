@@ -87,7 +87,7 @@ export const buildings: Building[] = [
         name: 'Mansion House - Main',
         type: 'EM300-DI',
         location: 'Main Hall',
-        conversionFactor: 10
+        conversionFactor: 1
       },
     ],
     primarySensors: {
