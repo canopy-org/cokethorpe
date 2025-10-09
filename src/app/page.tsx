@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { SensorType } from '@/types/sensor';
 import { buildings, getPrimarySensorDevice } from '@/lib/buildings';
 import { useSensorData } from '@/hooks/useSensorData';
@@ -47,7 +48,8 @@ function BuildingMarker({
   }
 
   return (
-    <div 
+    <Link 
+      href={`/buildings/${building.id}`}
       className="building-marker-container"
       style={{
         top: building.coordinates.top, 
@@ -96,8 +98,8 @@ function BuildingMarker({
             )}
             {energyDeviceId && energyRate !== null && (
               <div className="tooltip-row">
-                <span className="tooltip-label">Current Power:</span>
-                <span className="tooltip-value">{energyRate.toFixed(0)} kW</span>
+                <span className="tooltip-label">Energy (rate):</span>
+                <span className="tooltip-value">{energyRate.toFixed(0)} kWh</span>
               </div>
             )}
             {batteryDeviceId && battery !== null && (
@@ -110,9 +112,12 @@ function BuildingMarker({
               <span className="tooltip-area">Area: {building.area.toLocaleString()}m²</span>
             </div>
           </div>
+          <div className="tooltip-click-hint">
+            Click to view details →
+          </div>
         </div>
       )}
-    </div>
+    </Link>
   );
 }
 
@@ -165,6 +170,8 @@ export default function Home() {
           position: absolute;
           transform: translate(-50%, -50%);
           z-index: 10;
+          text-decoration: none;
+          color: inherit;
         }
 
         .building-marker-container:hover {
@@ -218,7 +225,6 @@ export default function Home() {
           font-weight: 600;
           text-align: center;
           line-height: 1;
-          
         }
 
         /* Tooltip Styles */
@@ -311,6 +317,18 @@ export default function Home() {
           font-size: 12px;
           color: rgba(255, 255, 255, 0.6);
           font-style: italic;
+        }
+
+        .tooltip-click-hint {
+          margin-top: 8px;
+          padding: 8px 12px;
+          background: rgba(59, 130, 246, 0.2);
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          text-align: center;
+          font-size: 12px;
+          color: rgba(96, 165, 250, 1);
+          font-weight: 600;
+          border-radius: 0 0 10px 10px;
         }
 
         /* Arrow pointer for tooltip */

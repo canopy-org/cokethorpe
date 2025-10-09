@@ -3,6 +3,7 @@
 import { useSiteEnergyData } from '@/hooks/useSiteEnergyData';
 import { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts';
+import { getBuildingById } from '@/lib/buildings';
 
 function TimePeriodSelector({ 
   value, 
@@ -17,7 +18,7 @@ function TimePeriodSelector({
     { label: 'Last 24 Hours', value: '-24h' },
     { label: 'Last 7 Days', value: '-7d' },
     { label: 'Last 30 Days', value: '-30d' },
-    { label: 'Last 12 months', value: '-365d' },
+    { label: 'Last 90 Days', value: '-90d' },
   ];
 
   return (
@@ -72,13 +73,15 @@ function SiteMetricCard({
         <span className="text-3xl">{icon}</span>
       </div>
       <p className="text-5xl font-bold" style={{ color: color }}>
-        {value !== null ? value.toFixed(0) : '--'}
+        {value !== null ? value.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '--'}
         <span className="text-2xl ml-2">{unit}</span>
       </p>
       <p className="text-xs text-gray-400 mt-2">{getPeriodLabel(timeRange)}</p>
     </div>
   );
 }
+
+type ChartDisplayMode = 'absolute' | 'normalized';
 
 function BuildingComparisonChart({ 
   data,
@@ -89,6 +92,7 @@ function BuildingComparisonChart({
 }) {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
+  const [displayMode, setDisplayMode] = useState<ChartDisplayMode>('absolute');
 
   const getPeriodLabel = (range: string): string => {
     const labels: { [key: string]: string } = {
@@ -119,13 +123,36 @@ function BuildingComparisonChart({
       return;
     }
 
-    const buildingNames = validData.map(d => d.buildingName);
-    const gasValues = validData.map(d => d.gasUsage || 0);
+    // Calculate values based on display mode
+    const chartData = validData.map(d => {
+      const building = getBuildingById(d.buildingId);
+      if (displayMode === 'normalized' && building && building.area > 0) {
+        return {
+          name: d.buildingName,
+          value: (d.gasUsage || 0) / building.area
+        };
+      }
+      return {
+        name: d.buildingName,
+        value: d.gasUsage || 0
+      };
+    });
+
+    // Sort by value (descending)
+    chartData.sort((a, b) => b.value - a.value);
+
+    const buildingNames = chartData.map(d => d.name);
+    const gasValues = chartData.map(d => d.value);
+
+    const unit = displayMode === 'normalized' ? 'kWh/m²' : 'kWh';
+    const title = displayMode === 'normalized' 
+      ? `Normalized Gas Usage by Building (${getPeriodLabel(timeRange)})`
+      : `Gas Usage by Building (${getPeriodLabel(timeRange)})`;
 
     // Chart configuration
     const option: echarts.EChartsOption = {
       title: {
-        text: `Gas Usage by Building (${getPeriodLabel(timeRange)})`,
+        text: title,
         left: 'center',
         textStyle: {
           fontSize: 18,
@@ -140,7 +167,11 @@ function BuildingComparisonChart({
         },
         formatter: (params: any) => {
           const param = params[0];
-          return `${param.name}<br/>Gas Usage: ${param.value.toFixed(2)} kWh`;
+          const formattedValue = param.value.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+          return `${param.name}<br/>Gas Usage: ${formattedValue} ${unit}`;
         }
       },
       grid: {
@@ -152,11 +183,11 @@ function BuildingComparisonChart({
       },
       xAxis: {
         type: 'value',
-        name: 'Gas Usage (kWh)',
+        name: `Gas Usage (${unit})`,
         nameLocation: 'middle',
         nameGap: 40,
         axisLabel: {
-          formatter: '{value}'
+          formatter: (value: number) => value.toLocaleString('en-US')
         }
       },
       yAxis: {
@@ -185,7 +216,13 @@ function BuildingComparisonChart({
           label: {
             show: true,
             position: 'right',
-            formatter: '{c} kWh',
+            formatter: (params: any) => {
+              const formattedValue = params.value.toLocaleString('en-US', {
+                minimumFractionDigits: displayMode === 'normalized' ? 2 : 0,
+                maximumFractionDigits: displayMode === 'normalized' ? 2 : 0
+              });
+              return `${formattedValue} ${unit}`;
+            },
             fontSize: 11
           },
           barMaxWidth: 40
@@ -193,7 +230,7 @@ function BuildingComparisonChart({
       ]
     };
 
-    chartInstance.current.setOption(option, true); // true = notMerge, replace all options
+    chartInstance.current.setOption(option, true);
 
     // Handle window resize
     const handleResize = () => {
@@ -204,7 +241,7 @@ function BuildingComparisonChart({
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [data, timeRange]);
+  }, [data, timeRange, displayMode]);
 
   // Cleanup on unmount ONLY
   useEffect(() => {
@@ -238,14 +275,26 @@ function BuildingComparisonChart({
 
   return (
     <div>
-      <div className="mb-2 text-sm text-gray-600">
-        Showing {validData.length} of {data.length} buildings with gas usage data
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm text-gray-600">
+          Showing {validData.length} of {data.length} buildings with gas usage data
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium text-gray-700">Display Mode:</label>
+          <select
+            value={displayMode}
+            onChange={(e) => setDisplayMode(e.target.value as ChartDisplayMode)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-sm font-medium"
+          >
+            <option value="absolute">Energy Usage (kWh)</option>
+            <option value="normalized">Normalized (kWh/m²)</option>
+          </select>
+        </div>
       </div>
       <div ref={chartRef} style={{ width: '100%', height: '600px' }} />
     </div>
   );
 }
-
 
 export default function SiteDataPage() {
   const [timeRange, setTimeRange] = useState('-24h');
@@ -315,7 +364,7 @@ export default function SiteDataPage() {
               <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">Total Energy</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
                 {data.totalElectricity !== null && data.totalGas !== null
-                  ? (data.totalElectricity + data.totalGas).toFixed(0)
+                  ? (data.totalElectricity + data.totalGas).toLocaleString('en-US', { maximumFractionDigits: 0 })
                   : '--'}
                 <span className="text-lg ml-1">kWh</span>
               </p>
@@ -377,7 +426,9 @@ export default function SiteDataPage() {
                       {building.buildingName}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
-                      {building.gasUsage !== null ? building.gasUsage.toFixed(2) : '--'}
+                      {building.gasUsage !== null 
+                        ? building.gasUsage.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : '--'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                       {building.gasUsage !== null && data.totalGas !== null && data.totalGas > 0
