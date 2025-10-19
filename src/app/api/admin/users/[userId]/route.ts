@@ -4,7 +4,7 @@ import { getAuthUser, hasRole } from '@/lib/auth';
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    props: { params: Promise<{ userId: string }> }
 ) {
     try {
         const currentUser = await getAuthUser();
@@ -16,6 +16,7 @@ export async function PATCH(
         }
 
         const { name, role, permissions, active } = await req.json();
+        const params = await props.params;
         const userId = params.userId;
 
         await sql`
@@ -40,7 +41,7 @@ export async function PATCH(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    props: { params: Promise<{ userId: string }> }
 ) {
     try {
         const currentUser = await getAuthUser();
@@ -51,6 +52,7 @@ export async function DELETE(
             );
         }
 
+        const params = await props.params;
         const userId = params.userId;
 
         // Prevent deleting yourself
