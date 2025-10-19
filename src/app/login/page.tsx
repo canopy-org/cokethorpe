@@ -29,7 +29,7 @@ export default function LoginPage() {
                 return;
             }
 
-            router.push('/site-data');
+            router.push('/home');
             router.refresh();
         } catch (err) {
             setError('An error occurred');
