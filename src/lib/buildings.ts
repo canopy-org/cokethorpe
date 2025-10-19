@@ -63,7 +63,7 @@ export const buildings: Building[] = [
     coordinates: { top: '55%', left: '70%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-03', 
         name: 'Mansion House - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -72,9 +72,9 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-03',
+      humidity: 'TH-03',
+      energy: 'PC-03',
     }
   },
   {
@@ -84,7 +84,7 @@ export const buildings: Building[] = [
     coordinates: { top: '58%', left: '77%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-04', 
         name: 'Mansion Top Floor - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -93,10 +93,10 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
-    }
+      temperature: 'TH-04',
+      humidity: 'TH-04',
+      energy: 'PC-04',
+    } 
   },
   {
     id: '3',
@@ -105,7 +105,7 @@ export const buildings: Building[] = [
     coordinates: { top: '60%', left: '67%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-05', 
         name: 'Round House - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -114,24 +114,24 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-05',
+      humidity: 'TH-05',
+      energy: 'PC-05',
     }
   },
   {
     id: '4',
-    name: 'Library',
+    name: 'Crantham Library',
     area: 1200,
     coordinates: { top: '38%', left: '52%' },
     devices: [
       { 
         deviceId: 'uncategorised', 
-        name: 'Library - Gas',
+        name: 'Crantham Library - Electricity',
         type: 'EM300-DI',
         location: 'Main Hall',
         conversionFactor: 1,
-        energyType: 'gas'
+        energyType: 'electricity'
       },
     ],
     primarySensors: {
@@ -147,7 +147,7 @@ export const buildings: Building[] = [
     coordinates: { top: '30%', left: '45%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-06', 
         name: 'Dining Hall - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -156,20 +156,20 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-06',
+      humidity: 'TH-06',
+      energy: 'PC-06',
     }
   },
   {
     id: '6',
-    name: 'Arts Building',
+    name: 'Art & Textiles',
     area: 1400,
     coordinates: { top: '53%', left: '65%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
-        name: 'Arts Building - Gas',
+        deviceId: 'PC-07', 
+        name: 'Art & Textiles - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
         conversionFactor: 1,
@@ -177,9 +177,9 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-07',
+      humidity: 'TH-07',
+      energy: 'PC-07',
     }
   },
   {
@@ -189,7 +189,7 @@ export const buildings: Building[] = [
     coordinates: { top: '65%', left: '67%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-08', 
         name: 'Old Schoolhouse - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -198,19 +198,19 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-08',
+      humidity: 'TH-08',
+      energy: 'PC-08',
     }
   },
   {
     id: '8',
-    name: 'Medical',
+    name: 'Medical & Bell Tower',
     area: 900,
     coordinates: { top: '52%', left: '60%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-09', 
         name: 'Medical - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -219,20 +219,20 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-09',
+      humidity: 'TH-09',
+      energy: 'PC-09',
     }
   },
   {
     id: '9',
-    name: 'Music',
+    name: 'The Grove',
     area: 600,
     coordinates: { top: '55%', left: '48%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
-        name: 'Music - Gas',
+        deviceId: 'PC-10', 
+        name: 'The grove - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
         conversionFactor: 1,
@@ -240,19 +240,19 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-10',
+      humidity: 'TH-10',
+      energy: 'PC-10',
     }
   },
   {
     id: '10',
-    name: 'Sports',
+    name: 'Sports Hall',
     area: 2000,
     coordinates: { top: '34%', left: '20%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-11', 
         name: 'Sports - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -261,9 +261,9 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-11',
+      humidity: 'TH-11',
+      energy: 'PC-11',
     }
   },
   {
@@ -273,7 +273,7 @@ export const buildings: Building[] = [
     coordinates: { top: '45%', left: '32%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-12', 
         name: 'Vanbrugh - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -282,9 +282,9 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-12',
+      humidity: 'TH-12',
+      energy: 'PC-12',
     }
   },
   {
@@ -294,7 +294,7 @@ export const buildings: Building[] = [
     coordinates: { top: '29%', left: '27%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-13', 
         name: 'The Shed - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -303,9 +303,9 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-13',
+      humidity: 'TH-13',
+      energy: 'PC-13',
     }
   },
   {
@@ -315,7 +315,7 @@ export const buildings: Building[] = [
     coordinates: { top: '35%', left: '70%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-14', 
         name: 'Pavilion - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
@@ -324,72 +324,93 @@ export const buildings: Building[] = [
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-14',
+      humidity: 'TH-14',
+      energy: 'PC-14',
     }
   },
   {
     id: '14',
-    name: 'SWIFT',
+    name: 'SWIFT & Academic Building',
     area: 1100,
     coordinates: { top: '52%', left: '38%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-15', 
         name: 'SWIFT - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
-        conversionFactor: 0.1,
+        conversionFactor: 1,
         energyType: 'gas'
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-15',
+      humidity: 'TH-15',
+      energy: 'PC-15',
     }
   },
   {
     id: '15',
-    name: 'Staff Room',
+    name: 'Teacher\'s Common Room',
     area: 1600,
     coordinates: { top: '59%', left: '59%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-16', 
         name: 'Staff Room - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
-        conversionFactor: 3,
+        conversionFactor: 1,
         energyType: 'gas'
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-16',
+      humidity: 'TH-16',
+      energy: 'PC-16',
     }
   },
   {
     id: '16',
-    name: 'IT',
+    name: 'DT',
     area: 600,
     coordinates: { top: '41%', left: '41%' },
     devices: [
       { 
-        deviceId: 'uncategorised', 
+        deviceId: 'PC-17', 
         name: 'IT - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
-        conversionFactor: 2,
+        conversionFactor: 1,
         energyType: 'gas'
       },
     ],
     primarySensors: {
-      temperature: 'uncategorised',
-      humidity: 'uncategorised',
-      energy: 'uncategorised',
+      temperature: 'TH-17',
+      humidity: 'TH-17',
+      energy: 'PC-17',
+    }
+  },
+  {
+    id: '17',
+    name: 'Kitchen',
+    area: 600,
+    coordinates: { top: '32%', left: '49%' },
+    devices: [
+      { 
+        deviceId: 'PC-17', 
+        name: 'Kitchen - Gas',
+        type: 'EM300-DI',
+        location: 'Kitchen',
+        conversionFactor: 1,
+        energyType: 'gas'
+      },
+    ],
+    primarySensors: {
+      temperature: 'TH-17',
+      humidity: 'TH-17',
+      energy: 'PC-17',
     }
   }
 ];
