@@ -1,17 +1,18 @@
 import { SensorType } from '@/types/sensor';
 
 export function getTemperatureColor(temp: number): string {
-  if (temp < 15) return 'rgba(52, 152, 219, 0.7)';    // Cold - Blue
-  if (temp < 18) return 'rgba(46, 204, 113, 0.7)';    // Good - Green
-  if (temp < 21) return 'rgba(243, 156, 18, 0.7)';    // Warm - Amber/Orange
+  if (temp < 16) return 'rgba(52, 152, 219, 0.7)';    // Cold - Blue
+  if (temp < 18) return 'rgba(98, 252, 213, 0.7)';    // Good - Green
+  if (temp < 22) return 'rgba(46, 204, 113, 0.7)';    // Good - Green
+  if (temp < 24) return 'rgba(243, 156, 18, 0.7)';    // Warm - Amber/Orange
   return 'rgba(231, 76, 60, 0.7)';                    // Hot - Red
 }
 
 export function getHumidityColor(humidity: number): string {
   if (humidity < 30) return 'rgba(231, 76, 60, 0.7)';    // Too dry - Red
   if (humidity < 40) return 'rgba(243, 156, 18, 0.7)';   // Low - Amber
-  if (humidity < 60) return 'rgba(46, 204, 113, 0.7)';   // Good - Green
-  if (humidity < 70) return 'rgba(243, 156, 18, 0.7)';   // High - Amber
+  if (humidity < 70) return 'rgba(46, 204, 113, 0.7)';   // Good - Green
+  if (humidity < 80) return 'rgba(98, 252, 213, 0.7)';   // High - Amber
   return 'rgba(52, 152, 219, 0.7)';                      // Too humid - Blue
 }
 

@@ -39,7 +39,7 @@ function BuildingMarker({
 
     const backgroundColor = displayValue !== null
         ? getColorForMetric(displayValue, selectedMetric)
-        : '#95a5a6';
+        : 'rgba(149, 165, 166, 0.7)';
 
     // Get appropriate unit based on metric
     let unit = getUnitForMetric(selectedMetric);
@@ -179,11 +179,11 @@ export default function Home() {
         }
         
         .temp-sensor {
-          width: 3.5vw;
-          height: 3.5vw;
-          min-width: 60px;
+          width: 3.0vw;
+          height: 3.0vw;
+          min-width: 50px;
           max-width: 90px;
-          min-height: 60px;
+          min-height: 50px;
           max-height: 90px;
           border-radius: 50%;
           font-weight: bold;
@@ -194,7 +194,7 @@ export default function Home() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          backdrop-filter: blur(3px);
+          backdrop-filter: blur(1px);
           transition: all 0.3s ease;
           border: 3px solid rgba(255,255,255,0.6);
           aspect-ratio: 1;
