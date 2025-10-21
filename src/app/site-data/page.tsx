@@ -14,11 +14,11 @@ function TimePeriodSelector({
 }) {
   const periods = [
     { label: 'Last Hour', value: '-1h' },
-    { label: 'Last 6 Hours', value: '-6h' },
     { label: 'Last 24 Hours', value: '-24h' },
     { label: 'Last 7 Days', value: '-7d' },
     { label: 'Last 30 Days', value: '-30d' },
     { label: 'Last 90 Days', value: '-90d' },
+    { label: 'Last 12 Months', value: '-365d' }
   ];
 
   return (
@@ -87,7 +87,7 @@ function BuildingComparisonChart({
   data,
   timeRange 
 }: { 
-  data: { buildingId: string; buildingName: string; gasUsage: number | null }[];
+  data: { buildingId: string; buildingName: string; gasUsage?: number | null; oilUsage?: number | null }[];
   timeRange: string;
 }) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -102,6 +102,7 @@ function BuildingComparisonChart({
       '-7d': 'Last 7 Days',
       '-30d': 'Last 30 Days',
       '-90d': 'Last 90 Days',
+      '-365d': 'Last 12 Months'
     };
     return labels[range] || range;
   };
@@ -114,9 +115,11 @@ function BuildingComparisonChart({
       chartInstance.current = echarts.init(chartRef.current);
     }
 
-    // Filter out null values and prepare data
-    const validData = data.filter(d => d.gasUsage !== null && d.gasUsage > 0);
-    
+    // Filter out null/zero combined values and prepare data (use gas + oil)
+    const validData = data
+      .map(d => ({ ...d, combined: (d.gasUsage || 0) + (d.oilUsage || 0) }))
+      .filter(d => d.combined > 0);
+
     if (validData.length === 0) {
       // Clear the chart if no data
       chartInstance.current.clear();
@@ -129,12 +132,12 @@ function BuildingComparisonChart({
       if (displayMode === 'normalized' && building && building.area > 0) {
         return {
           name: d.buildingName,
-          value: (d.gasUsage || 0) / building.area
+          value: d.combined / building.area
         };
       }
       return {
         name: d.buildingName,
-        value: d.gasUsage || 0
+        value: d.combined
       };
     });
 
@@ -142,12 +145,12 @@ function BuildingComparisonChart({
     chartData.sort((a, b) => b.value - a.value);
 
     const buildingNames = chartData.map(d => d.name);
-    const gasValues = chartData.map(d => d.value);
+    const values = chartData.map(d => d.value);
 
     const unit = displayMode === 'normalized' ? 'kWh/m²' : 'kWh';
     const title = displayMode === 'normalized' 
-      ? `Normalized Gas Usage by Building (${getPeriodLabel(timeRange)})`
-      : `Gas Usage by Building (${getPeriodLabel(timeRange)})`;
+      ? `Normalized Gas + Oil by Building (${getPeriodLabel(timeRange)})`
+      : `Gas + Oil by Building (${getPeriodLabel(timeRange)})`;
 
     // Chart configuration
     const option: echarts.EChartsOption = {
@@ -171,7 +174,7 @@ function BuildingComparisonChart({
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
           });
-          return `${param.name}<br/>Gas Usage: ${formattedValue} ${unit}`;
+          return `${param.name}<br/>Gas + Oil: ${formattedValue} ${unit}`;
         }
       },
       grid: {
@@ -183,7 +186,7 @@ function BuildingComparisonChart({
       },
       xAxis: {
         type: 'value',
-        name: `Gas Usage (${unit})`,
+        name: `Energy (${unit})`,
         nameLocation: 'middle',
         nameGap: 40,
         axisLabel: {
@@ -203,9 +206,9 @@ function BuildingComparisonChart({
       },
       series: [
         {
-          name: 'Gas Usage',
+          name: 'Gas + Oil',
           type: 'bar',
-          data: gasValues,
+          data: values,
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
               { offset: 0, color: '#f39c12' },
@@ -254,18 +257,18 @@ function BuildingComparisonChart({
   }, []);
 
   // Check if we have any valid data
-  const validData = data.filter(d => d.gasUsage !== null && d.gasUsage > 0);
+  const validData = data.map(d => ({ ...d, combined: (d.gasUsage || 0) + (d.oilUsage || 0) })).filter(d => d.combined > 0);
 
   if (data.length === 0 || validData.length === 0) {
     return (
       <div className="h-[600px] flex items-center justify-center bg-gray-50 rounded border-2 border-gray-200">
         <div className="text-center p-6">
           <div className="text-6xl mb-4">📊</div>
-          <p className="text-gray-600 font-semibold mb-2">No Gas Usage Data Available</p>
+          <p className="text-gray-600 font-semibold mb-2">No Gas + Oil Usage Data Available</p>
           <p className="text-gray-500 text-sm">
             {data.length === 0 
               ? 'No buildings configured' 
-              : `${data.length} buildings found, but no gas usage data for the selected period`}
+              : `${data.length} buildings found, but no gas or oil usage data for the selected period`}
           </p>
           <p className="text-gray-400 text-xs mt-2">Try selecting a different time period</p>
         </div>
@@ -277,7 +280,7 @@ function BuildingComparisonChart({
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="text-sm text-gray-600">
-          Showing {validData.length} of {data.length} buildings with gas usage data
+          Showing {validData.length} of {data.length} buildings with gas or oil usage data
         </div>
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium text-gray-700">Display Mode:</label>
@@ -300,7 +303,7 @@ export default function SiteDataPage() {
   const [timeRange, setTimeRange] = useState('-24h');
   const { data, loading, error } = useSiteEnergyData(timeRange, 10000);
 
-  if (loading && !data.totalGas && !data.totalElectricity) {
+  if (loading && !data.totalGas && !data.totalElectricity && !data.totalOil) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -323,6 +326,8 @@ export default function SiteDataPage() {
     );
   }
 
+  const fossilTotal = (data.totalGas || 0) + (data.totalOil || 0);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -331,14 +336,14 @@ export default function SiteDataPage() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">Site-Wide Energy Data</h1>
-              <p className="text-gray-600">Overview of total electricity and gas consumption across Cokethorpe</p>
+              <p className="text-gray-600">Overview of total electricity, gas and oil consumption across Cokethorpe</p>
             </div>
             <TimePeriodSelector value={timeRange} onChange={setTimeRange} />
           </div>
         </div>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <SiteMetricCard
             title="Total Electricity"
             value={data.totalElectricity}
@@ -355,6 +360,14 @@ export default function SiteDataPage() {
             icon="🔥"
             timeRange={timeRange}
           />
+          <SiteMetricCard
+            title="Total Oil"
+            value={data.totalOil}
+            unit="kWh"
+            color="#8b5e3c"
+            icon="🛢️"
+            timeRange={timeRange}
+          />
         </div>
 
         {/* Summary Stats */}
@@ -363,8 +376,8 @@ export default function SiteDataPage() {
             <div className="text-center">
               <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">Total Energy</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {data.totalElectricity !== null && data.totalGas !== null
-                  ? (data.totalElectricity + data.totalGas).toLocaleString('en-US', { maximumFractionDigits: 0 })
+                {(data.totalElectricity !== null || data.totalGas !== null || data.totalOil !== null)
+                  ? ((data.totalElectricity || 0) + (data.totalGas || 0) + (data.totalOil || 0)).toLocaleString('en-US', { maximumFractionDigits: 0 })
                   : '--'}
                 <span className="text-lg ml-1">kWh</span>
               </p>
@@ -372,18 +385,18 @@ export default function SiteDataPage() {
             <div className="text-center">
               <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">Active Buildings</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {data.buildingBreakdown.filter(b => b.gasUsage !== null).length}
+                {data.buildingBreakdown.filter(b => (b.gasUsage !== null) || (b.oilUsage !== null)).length}
                 <span className="text-lg ml-1">/ {data.buildingBreakdown.length}</span>
               </p>
             </div>
             <div className="text-center">
               <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">Energy Split</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {data.totalElectricity !== null && data.totalGas !== null && (data.totalElectricity + data.totalGas) > 0
-                  ? `${((data.totalElectricity / (data.totalElectricity + data.totalGas)) * 100).toFixed(0)}% / ${((data.totalGas / (data.totalElectricity + data.totalGas)) * 100).toFixed(0)}%`
+                {data.totalElectricity !== null && fossilTotal > 0
+                  ? `${((data.totalElectricity / (data.totalElectricity + fossilTotal)) * 100).toFixed(0)}% / ${((fossilTotal / (data.totalElectricity + fossilTotal)) * 100).toFixed(0)}%`
                   : '--'}
               </p>
-              <p className="text-xs text-gray-500 mt-1">Elec / Gas</p>
+              <p className="text-xs text-gray-500 mt-1">Elec / Fossil (Gas+Oil)</p>
             </div>
           </div>
         </div>
@@ -396,7 +409,7 @@ export default function SiteDataPage() {
         {/* Building List Table */}
         <div className="mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Building Gas Usage Details</h2>
+            <h2 className="text-xl font-bold text-gray-900">Building Gas & Oil Usage Details</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -412,31 +425,42 @@ export default function SiteDataPage() {
                     Gas Usage (kWh)
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    % of Total
+                    Oil Usage (kWh)
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    % of Fossil
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {data.buildingBreakdown.map((building, index) => (
-                  <tr key={building.buildingId} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{index + 1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {building.buildingName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
-                      {building.gasUsage !== null 
-                        ? building.gasUsage.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                        : '--'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                      {building.gasUsage !== null && data.totalGas !== null && data.totalGas > 0
-                        ? `${((building.gasUsage / data.totalGas) * 100).toFixed(1)}%`
-                        : '--'}
-                    </td>
-                  </tr>
-                ))}
+                {data.buildingBreakdown.map((building, index) => {
+                  const combined = (building.gasUsage || 0) + (building.oilUsage || 0);
+                  return (
+                    <tr key={building.buildingId} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        #{index + 1}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {building.buildingName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
+                        {building.gasUsage !== null 
+                          ? (building.gasUsage ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                          : '--'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
+                        {building.oilUsage !== null 
+                          ? (building.oilUsage ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                          : '--'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                        {combined > 0 && fossilTotal > 0
+                          ? `${((combined / fossilTotal) * 100).toFixed(1)}%`
+                          : '--'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

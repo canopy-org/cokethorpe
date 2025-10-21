@@ -29,7 +29,7 @@ export interface Device {
   location?: string;
   sensors?: string[]; // Auto-populated from type, but can override if needed
   conversionFactor?: number; // kWh/pulse conversion factor for gas/oil meters
-  energyType?: 'gas' | 'electricity'; // Type of energy this device measures
+  energyType?: 'gas' | 'electricity' | 'oil'; // Type of energy this device measures
 }
 
 export interface Building {
@@ -52,7 +52,7 @@ export interface SiteConfig {
 
 export const siteConfig: SiteConfig = {
   electricityDeviceId: 'uncategorised', // Replace with your actual electricity meter device ID
-  electricityConversionFactor: 0.1, // Adjust based on your meter's pulse/kWh ratio
+  electricityConversionFactor: 1, // Adjust based on your meter's pulse/kWh ratio
 };
 
 export const buildings: Building[] = [
@@ -68,7 +68,13 @@ export const buildings: Building[] = [
         type: 'EM300-DI',
         location: 'Main Hall',
         conversionFactor: 1,
-        energyType: 'gas'
+        energyType: 'oil'
+      },
+      { 
+        deviceId: 'TH-03', 
+        name: 'Mansion House - TH sensor',
+        type: 'EM300-TH',
+        location: 'First floor landing',
       },
     ],
     primarySensors: {
@@ -87,9 +93,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-04', 
         name: 'Mansion Top Floor - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Coelho',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+     { 
+        deviceId: 'TH-04', 
+        name: 'Mansion Top floor - TH sensor',
+        type: 'EM300-TH',
+        location: 'Reading Room',
       },
     ],
     primarySensors: {
@@ -108,10 +120,17 @@ export const buildings: Building[] = [
         deviceId: 'PC-05', 
         name: 'Round House - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Old Schoolhouse',
         conversionFactor: 1,
         energyType: 'gas'
       },
+      { 
+        deviceId: 'TH-05', 
+        name: 'Round house - TH sensor',
+        type: 'EM300-TH',
+        location: 'Round house',
+      },
+    
     ],
     primarySensors: {
       temperature: 'TH-05',
@@ -133,6 +152,12 @@ export const buildings: Building[] = [
         conversionFactor: 1,
         energyType: 'gas'
       },
+      { 
+        deviceId: 'TH-20', 
+        name: 'Headmasters - TH sensor',
+        type: 'EM300-TH',
+        location: 'Headmasters house',
+      },
     ],
     primarySensors: {
       temperature: 'TH-20',
@@ -150,9 +175,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-06', 
         name: 'Dining Hall - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'External gas cupboard',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-06', 
+        name: 'Dining hall - TH sensor',
+        type: 'EM300-TH',
+        location: 'Dining Hall',
       },
     ],
     primarySensors: {
@@ -171,9 +202,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-07', 
         name: 'Art & Textiles - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Art boiler room',
         conversionFactor: 1,
-        energyType: 'gas'
+        energyType: 'oil'
+      },
+      { 
+        deviceId: 'TH-17', 
+        name: 'Art - TH sensor',
+        type: 'EM300-TH',
+        location: 'Art room',
       },
     ],
     primarySensors: {
@@ -192,9 +229,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-08', 
         name: 'Old Schoolhouse - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Shop Store',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-08', 
+        name: 'Old Schoolhouse - TH sensor',
+        type: 'EM300-TH',
+        location: 'School Shop',
       },
     ],
     primarySensors: {
@@ -213,9 +256,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-09', 
         name: 'Medical - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Boilee cupboard',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-09', 
+        name: 'Bell Tower - TH sensor',
+        type: 'EM300-TH',
+        location: 'Girls Changing Rooms',
       },
     ],
     primarySensors: {
@@ -234,9 +283,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-10', 
         name: 'The grove - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Laundry room',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-10', 
+        name: 'Grove - TH sensor',
+        type: 'EM300-TH',
+        location: 'Classroom',
       },
     ],
     primarySensors: {
@@ -255,9 +310,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-11', 
         name: 'Sports - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Sports plantroom',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-11', 
+        name: 'Sports - TH sensor',
+        type: 'EM300-TH',
+        location: 'Sports Hall',
       },
     ],
     primarySensors: {
@@ -276,9 +337,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-12', 
         name: 'Vanbrugh - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Vanbrugh boiler room',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-12', 
+        name: 'Vanbrugh - TH sensor',
+        type: 'EM300-TH',
+        location: 'Classroom',
       },
     ],
     primarySensors: {
@@ -297,9 +364,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-13', 
         name: 'The Shed - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'The Shed external AHU',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-13', 
+        name: 'Shed - TH sensor',
+        type: 'EM300-TH',
+        location: 'Theatre',
       },
     ],
     primarySensors: {
@@ -318,9 +391,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-14', 
         name: 'Pavilion - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Pavilion Room',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-14', 
+        name: 'DT - TH sensor',
+        type: 'EM300-TH',
+        location: 'Los Angeles Changing room',
       },
     ],
     primarySensors: {
@@ -339,9 +418,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-15', 
         name: 'SWIFT - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'SWIFT boiler room',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-15', 
+        name: 'SWIFT - TH sensor',
+        type: 'EM300-TH',
+        location: 'SWIFT classroom',
       },
     ],
     primarySensors: {
@@ -358,11 +443,17 @@ export const buildings: Building[] = [
     devices: [
       { 
         deviceId: 'PC-16', 
-        name: 'Staff Room - Gas',
+        name: 'Teachers Common room - gas boiler',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'Teachers kitchen',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-16', 
+        name: 'Teachers common room - TH sensor',
+        type: 'EM300-TH',
+        location: 'Common room',
       },
     ],
     primarySensors: {
@@ -379,11 +470,17 @@ export const buildings: Building[] = [
     devices: [
       { 
         deviceId: 'PC-17', 
-        name: 'IT - Gas',
+        name: 'DT - Gas',
         type: 'EM300-DI',
-        location: 'Main Hall',
+        location: 'IT office',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-17', 
+        name: 'DT - TH sensor',
+        type: 'EM300-TH',
+        location: 'DT',
       },
     ],
     primarySensors: {
@@ -402,9 +499,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-18', 
         name: 'Kitchen - Gas',
         type: 'EM300-DI',
-        location: 'Kitchen',
+        location: 'External Gas cupboard',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-18', 
+        name: 'Kitchen - TH sensor',
+        type: 'EM300-TH',
+        location: 'Kitchen',
       },
     ],
     primarySensors: {
@@ -423,9 +526,15 @@ export const buildings: Building[] = [
         deviceId: 'PC-19', 
         name: 'Music - Gas',
         type: 'EM300-DI',
-        location: 'Music',
+        location: 'External gas cupboard',
         conversionFactor: 1,
         energyType: 'gas'
+      },
+      { 
+        deviceId: 'TH-19', 
+        name: 'Music - TH sensor',
+        type: 'EM300-TH',
+        location: 'Music Room',
       },
     ],
     primarySensors: {
@@ -497,6 +606,25 @@ export function getAllGasDevices(): { buildingId: string; buildingName: string; 
   });
   
   return gasDevices;
+}
+
+export function getAllOilDevices(): { buildingId: string; buildingName: string; deviceId: string; conversionFactor: number }[] {
+  const oilDevices: { buildingId: string; buildingName: string; deviceId: string; conversionFactor: number }[] = [];
+  
+  buildings.forEach(building => {
+    building.devices.forEach(device => {
+      if (device.energyType === 'oil' && device.deviceId) {
+        oilDevices.push({
+          buildingId: building.id,
+          buildingName: building.name,
+          deviceId: device.deviceId,
+          conversionFactor: device.conversionFactor || 1
+        });
+      }
+    });
+  });
+  
+  return oilDevices;
 }
 
 // Get site electricity device info

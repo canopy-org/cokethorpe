@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { queryInfluxDB, buildHistoricalRateFluxQuery, influxConfig } from '@/lib/influxdb';
-import { getAllGasDevices, getSiteElectricityDevice } from '@/lib/buildings';
+import { getAllGasDevices, getAllOilDevices, getSiteElectricityDevice } from '@/lib/buildings';
 
 export interface SiteEnergyData {
   totalGas: number | null;
+  totalOil: number | null;
   totalElectricity: number | null;
   buildingBreakdown: {
     buildingId: string;
     buildingName: string;
-    gasUsage: number | null;
+    gasUsage?: number | null;
+    oilUsage?: number | null;
   }[];
 }
 
@@ -52,6 +54,7 @@ export function useSiteEnergyData(
 ) {
   const [data, setData] = useState<SiteEnergyData>({
     totalGas: null,
+    totalOil: null,
     totalElectricity: null,
     buildingBreakdown: []
   });
@@ -96,11 +99,18 @@ export function useSiteEnergyData(
           }
         }
 
-        // Fetch gas from all buildings
+        // Fetch gas and oil from all buildings
         const gasDevices = getAllGasDevices();
-        const buildingBreakdown: SiteEnergyData['buildingBreakdown'] = [];
-        let totalGasValue = 0;
+        const oilDevices = getAllOilDevices();
+        // Aggregate gas + oil into single breakdown map
+        const breakdownMap = new Map<string, {
+          buildingId: string;
+          buildingName: string;
+          gasUsage: number | null;
+          oilUsage: number | null;
+        }>();
 
+        let totalGasValue = 0;
         for (const device of gasDevices) {
           const gasQuery = buildHistoricalRateFluxQuery(
             influxConfig.bucket,
@@ -115,24 +125,60 @@ export function useSiteEnergyData(
           
           let gasUsage: number | null = null;
           if (gasData.length > 0) {
-            // Sum all values to get total consumption over the period
             const totalPulses = gasData.reduce((sum, point) => sum + point.value, 0);
             gasUsage = totalPulses * device.conversionFactor;
             totalGasValue += gasUsage;
           }
 
-          buildingBreakdown.push({
+          const entry = breakdownMap.get(device.buildingId) ?? {
             buildingId: device.buildingId,
             buildingName: device.buildingName,
-            gasUsage: gasUsage
-          });
+            gasUsage: null,
+            oilUsage: null
+          };
+          entry.gasUsage = (entry.gasUsage || 0) + (gasUsage || 0) || null;
+          breakdownMap.set(device.buildingId, entry);
         }
 
+        let totalOilValue = 0;
+        for (const device of oilDevices) {
+          const oilQuery = buildHistoricalRateFluxQuery(
+            influxConfig.bucket,
+            'alldata',
+            'water',
+            timeRange,
+            interval,
+            device.deviceId
+          );
+          const oilCsv = await queryInfluxDB(oilQuery);
+          const oilData = parseHistoricalCSV(oilCsv);
+          
+          let oilUsage: number | null = null;
+          if (oilData.length > 0) {
+            const totalPulses = oilData.reduce((sum, point) => sum + point.value, 0);
+            oilUsage = totalPulses * device.conversionFactor;
+            totalOilValue += oilUsage;
+          }
+
+          const entry = breakdownMap.get(device.buildingId) ?? {
+            buildingId: device.buildingId,
+            buildingName: device.buildingName,
+            gasUsage: null,
+            oilUsage: null
+          };
+          entry.oilUsage = (entry.oilUsage || 0) + (oilUsage || 0) || null;
+          breakdownMap.set(device.buildingId, entry);
+        }
+
+        const buildingBreakdown = Array.from(breakdownMap.values());
+
         setData({
+          totalOil: totalOilValue > 0 ? totalOilValue : null,
           totalGas: totalGasValue > 0 ? totalGasValue : null,
           totalElectricity: electricityValue,
-          buildingBreakdown: buildingBreakdown.sort((a, b) => 
-            (b.gasUsage || 0) - (a.gasUsage || 0)
+          // sort by combined gas + oil (descending)
+          buildingBreakdown: buildingBreakdown.sort((a, b) =>
+            ((b.gasUsage || 0) + (b.oilUsage || 0)) - ((a.gasUsage || 0) + (a.oilUsage || 0))
           )
         });
 
