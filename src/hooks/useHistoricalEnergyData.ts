@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { queryInfluxDB, buildHistoricalFluxQuery, buildHistoricalRateFluxQuery, influxConfig } from '@/lib/influxdb';
-import { getDeviceConversionFactor, getBuildingById } from '@/lib/buildings';
+import { getDeviceConversionFactor, getBuildingById, gas_kWh_L, oil_kWh_L, getDeviceById } from '@/lib/buildings';
 
 export type EnergyCalculationType = 'cumulative' | 'rate' | 'normalized';
 
@@ -22,6 +22,8 @@ export function useHistoricalEnergyData(
 
   useEffect(() => {
     if (!deviceId) {
+      // DEBUG: log missing device id so we can see why hook exits early
+      console.log('useHistoricalEnergyData: no deviceId provided for building', buildingId);
       setData([]);
       setLoading(false);
       return;
@@ -58,9 +60,22 @@ export function useHistoricalEnergyData(
         const csvData = await queryInfluxDB(query);
         const parsed = parseHistoricalCSV(csvData, timeRange);
         
-        // Convert all values using conversion factor
-        const conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
-        let convertedData = parsed.map(point => ({
+        // DEBUG: show parsed raw points length
+        console.log('useHistoricalEnergyData parsed points:', parsed.length, { buildingId, deviceId });
+        
+        // Determine conversion factor with fallbacks:
+        // 1) helper getDeviceConversionFactor (may return undefined)
+        // 2) device.conversionFactor stored on device object
+        // 3) energyType → global constants (oil_kWh_L / gas_kWh_L)
+        // 4) final fallback 1
+        let conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
+        const deviceObj = getDeviceById(buildingId, deviceId) ?? getBuildingById(buildingId)?.devices?.find(d => d.deviceId === deviceId || d.id === deviceId);
+        if (!conversionFactor || conversionFactor === 0) {
+          conversionFactor = deviceObj?.conversionFactor ?? (deviceObj?.energyType === 'oil' ? oil_kWh_L : deviceObj?.energyType === 'gas' ? gas_kWh_L : 1);
+        }
+        console.log('useHistoricalEnergyData conversion lookup:', { buildingId, deviceId, deviceObj, conversionFactor });
+
+        const convertedData = parsed.map(point => ({
           timestamp: point.timestamp,
           value: point.value * conversionFactor
         }));
@@ -69,12 +84,16 @@ export function useHistoricalEnergyData(
         if (calculationType === 'normalized') {
           const building = getBuildingById(buildingId);
           if (building && building.area > 0) {
-            convertedData = convertedData.map(point => ({
+            // convert to kWh/m²
+            const normalized = convertedData.map(point => ({
               timestamp: point.timestamp,
               value: point.value / building.area
             }));
-          }
-        }
+            // overwrite convertedData to normalized
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            convertedData.splice(0, convertedData.length, ...normalized);
+           }
+         }
         
         setData(convertedData);
         setError(null);

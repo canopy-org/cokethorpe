@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { queryInfluxDB, parseInfluxCSV, buildFluxQuery, buildRateFluxQuery, influxConfig } from '@/lib/influxdb';
-import { getDeviceConversionFactor, getBuildingById } from '@/lib/buildings';
+import { getDeviceConversionFactor, getDeviceById, gas_kWh_L, oil_kWh_L } from '@/lib/buildings';
 
 export type EnergyCalculationType = 'cumulative' | 'power' | 'normalized';
 
@@ -51,9 +51,17 @@ export function useEnergyData(
         
         if (pulseValue !== null) {
           // Convert pulses to energy using device-specific conversion factor
-          const conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
-          let energyValue = pulseValue * conversionFactor;
-          
+          let conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
+          const deviceObj = getDeviceById(buildingId, deviceId) ??
+            getBuildingById(buildingId)?.devices.find(d => d.deviceId === deviceId);
+
+          if (!conversionFactor) {
+            conversionFactor = deviceObj?.conversionFactor ??
+              (deviceObj?.energyType === 'oil' ? oil_kWh_L :
+               deviceObj?.energyType === 'gas' ? gas_kWh_L : 1);
+          }
+          const energyValue = pulseValue * conversionFactor;
+            
           // If normalized, divide by building area
           if (calculationType === 'normalized') {
             const building = getBuildingById(buildingId);
@@ -61,7 +69,7 @@ export function useEnergyData(
               energyValue = energyValue / building.area;
             }
           }
-          
+            
           setValue(energyValue);
         } else {
           setValue(null);

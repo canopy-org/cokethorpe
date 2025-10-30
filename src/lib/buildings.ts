@@ -22,6 +22,8 @@ export interface SensorMapping {
   electricity?: string; // Electricity meters
 }
 
+
+
 export interface Device {
   deviceId: string;
   name: string;
@@ -31,6 +33,9 @@ export interface Device {
   conversionFactor?: number; // kWh/pulse conversion factor for gas/oil meters
   energyType?: 'gas' | 'electricity' | 'oil'; // Type of energy this device measures
 }
+
+export const gas_kWh_L = 0.01116; // kWh per litre of gas(approx)
+export const oil_kWh_L = 10.35; // kWh per litre (approx)
 
 export interface Building {
   id: string;
@@ -67,7 +72,7 @@ export const buildings: Building[] = [
         name: 'Mansion House - Gas',
         type: 'EM300-DI',
         location: 'Main Hall',
-        conversionFactor: 1,
+        conversionFactor: oil_kWh_L,
         energyType: 'oil'
       },
       { 
@@ -94,7 +99,7 @@ export const buildings: Building[] = [
         name: 'Mansion Top Floor - Gas',
         type: 'EM300-DI',
         location: 'Coelho',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
      { 
@@ -121,7 +126,7 @@ export const buildings: Building[] = [
         name: 'Round House - Gas',
         type: 'EM300-DI',
         location: 'Old Schoolhouse',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -149,7 +154,7 @@ export const buildings: Building[] = [
         name: 'Headmasters - Gas',
         type: 'EM300-DI',
         location: 'Headmasters house',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -169,14 +174,14 @@ export const buildings: Building[] = [
     id: '5',
     name: 'Dining Hall',
     area: 1500,
-    coordinates: { top: '30%', left: '45%' },
+    coordinates: { top: '36%', left: '48%' },
     devices: [
       { 
         deviceId: 'PC-06', 
         name: 'Dining Hall - Gas',
         type: 'EM300-DI',
         location: 'External gas cupboard',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -196,14 +201,14 @@ export const buildings: Building[] = [
     id: '6',
     name: 'Art & Textiles',
     area: 1400,
-    coordinates: { top: '53%', left: '65%' },
+    coordinates: { top: '55%', left: '65%' },
     devices: [
       { 
         deviceId: 'PC-07', 
-        name: 'Art & Textiles - Gas',
+        name: 'Art & Textiles - Oil',
         type: 'EM300-DI',
         location: 'Art boiler room',
-        conversionFactor: 1,
+        conversionFactor: oil_kWh_L,
         energyType: 'oil'
       },
       { 
@@ -230,7 +235,7 @@ export const buildings: Building[] = [
         name: 'Old Schoolhouse - Gas',
         type: 'EM300-DI',
         location: 'Shop Store',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -257,7 +262,7 @@ export const buildings: Building[] = [
         name: 'Medical - Gas',
         type: 'EM300-DI',
         location: 'Boilee cupboard',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -277,14 +282,14 @@ export const buildings: Building[] = [
     id: '9',
     name: 'The Grove',
     area: 600,
-    coordinates: { top: '61%', left: '54%' },
+    coordinates: { top: '62%', left: '56%' },
     devices: [
       { 
         deviceId: 'PC-10', 
         name: 'The grove - Gas',
         type: 'EM300-DI',
         location: 'Laundry room',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -304,14 +309,14 @@ export const buildings: Building[] = [
     id: '10',
     name: 'Sports Hall',
     area: 2000,
-    coordinates: { top: '34%', left: '20%' },
+    coordinates: { top: '34%', left: '22%' },
     devices: [
       { 
         deviceId: 'PC-11', 
         name: 'Sports - Gas',
         type: 'EM300-DI',
         location: 'Sports plantroom',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -331,14 +336,14 @@ export const buildings: Building[] = [
     id: '11',
     name: 'Vanbrugh',
     area: 2000,
-    coordinates: { top: '45%', left: '32%' },
+    coordinates: { top: '44%', left: '35%' },
     devices: [
       { 
         deviceId: 'PC-12', 
         name: 'Vanbrugh - Gas',
         type: 'EM300-DI',
         location: 'Vanbrugh boiler room',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -358,14 +363,14 @@ export const buildings: Building[] = [
     id: '12',
     name: 'The Shed',
     area: 2000,
-    coordinates: { top: '29%', left: '27%' },
+    coordinates: { top: '32%', left: '27%' },
     devices: [
       { 
         deviceId: 'PC-13', 
         name: 'The Shed - Gas',
         type: 'EM300-DI',
         location: 'The Shed external AHU',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -385,14 +390,14 @@ export const buildings: Building[] = [
     id: '13',
     name: 'Pavilion',
     area: 400,
-    coordinates: { top: '35%', left: '70%' },
+    coordinates: { top: '38%', left: '68%' },
     devices: [
       { 
         deviceId: 'PC-14', 
         name: 'Pavilion - Gas',
         type: 'EM300-DI',
-        location: 'Pavilion Room',
-        conversionFactor: 1,
+        location: 'Tank Room',
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -412,14 +417,14 @@ export const buildings: Building[] = [
     id: '14',
     name: 'SWIFT & Academic Building',
     area: 1100,
-    coordinates: { top: '52%', left: '38%' },
+    coordinates: { top: '54%', left: '42%' },
     devices: [
       { 
         deviceId: 'PC-15', 
         name: 'SWIFT - Gas',
         type: 'EM300-DI',
         location: 'SWIFT boiler room',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -446,7 +451,7 @@ export const buildings: Building[] = [
         name: 'Teachers Common room - gas boiler',
         type: 'EM300-DI',
         location: 'Teachers kitchen',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -466,14 +471,14 @@ export const buildings: Building[] = [
     id: '16',
     name: 'DT',
     area: 600,
-    coordinates: { top: '41%', left: '41%' },
+    coordinates: { top: '41%', left: '42%' },
     devices: [
       { 
         deviceId: 'PC-17', 
         name: 'DT - Gas',
         type: 'EM300-DI',
         location: 'IT office',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -493,14 +498,14 @@ export const buildings: Building[] = [
     id: '17',
     name: 'Kitchen',
     area: 600,
-    coordinates: { top: '32%', left: '49%' },
+    coordinates: { top: '30%', left: '45%' },
     devices: [
       { 
         deviceId: 'PC-18', 
         name: 'Kitchen - Gas',
         type: 'EM300-DI',
         location: 'External Gas cupboard',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -527,7 +532,7 @@ export const buildings: Building[] = [
         name: 'Music - Gas',
         type: 'EM300-DI',
         location: 'External gas cupboard',
-        conversionFactor: 1,
+        conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
@@ -582,15 +587,15 @@ export function deviceHasSensor(device: Device, sensorType: string): boolean {
 }
 
 // Helper to get conversion factor for a device
-export function getDeviceConversionFactor(buildingId: string, deviceId: string): number {
+export function getDeviceConversionFactor(buildingId: string, deviceId: string): number | undefined {
   const building = getBuildingById(buildingId);
   const device = building?.devices.find(d => d.deviceId === deviceId);
-  return device?.conversionFactor || 1; // Default to 1 if no conversion needed
+  return device?.conversionFactor; // return undefined when not set
 }
 
 // Get all gas devices across all buildings
-export function getAllGasDevices(): { buildingId: string; buildingName: string; deviceId: string; conversionFactor: number }[] {
-  const gasDevices: { buildingId: string; buildingName: string; deviceId: string; conversionFactor: number }[] = [];
+export function getAllGasDevices(): { buildingId: string; buildingName: string; deviceId: string; conversionFactor?: number }[] {
+  const gasDevices: { buildingId: string; buildingName: string; deviceId: string; conversionFactor?: number }[] = [];
   
   buildings.forEach(building => {
     building.devices.forEach(device => {
@@ -599,7 +604,7 @@ export function getAllGasDevices(): { buildingId: string; buildingName: string; 
           buildingId: building.id,
           buildingName: building.name,
           deviceId: device.deviceId,
-          conversionFactor: device.conversionFactor || 1
+          conversionFactor: device.conversionFactor // may be undefined
         });
       }
     });
@@ -608,8 +613,8 @@ export function getAllGasDevices(): { buildingId: string; buildingName: string; 
   return gasDevices;
 }
 
-export function getAllOilDevices(): { buildingId: string; buildingName: string; deviceId: string; conversionFactor: number }[] {
-  const oilDevices: { buildingId: string; buildingName: string; deviceId: string; conversionFactor: number }[] = [];
+export function getAllOilDevices(): { buildingId: string; buildingName: string; deviceId: string; conversionFactor?: number }[] {
+  const oilDevices: { buildingId: string; buildingName: string; deviceId: string; conversionFactor?: number }[] = [];
   
   buildings.forEach(building => {
     building.devices.forEach(device => {
@@ -618,7 +623,7 @@ export function getAllOilDevices(): { buildingId: string; buildingName: string; 
           buildingId: building.id,
           buildingName: building.name,
           deviceId: device.deviceId,
-          conversionFactor: device.conversionFactor || 1
+          conversionFactor: device.conversionFactor // may be undefined
         });
       }
     });
@@ -628,11 +633,11 @@ export function getAllOilDevices(): { buildingId: string; buildingName: string; 
 }
 
 // Get site electricity device info
-export function getSiteElectricityDevice(): { deviceId: string; conversionFactor: number } | null {
+export function getSiteElectricityDevice(): { deviceId: string; conversionFactor?: number } | null {
   if (siteConfig.electricityDeviceId) {
     return {
       deviceId: siteConfig.electricityDeviceId,
-      conversionFactor: siteConfig.electricityConversionFactor || 1
+      conversionFactor: siteConfig.electricityConversionFactor // may be undefined
     };
   }
   return null;

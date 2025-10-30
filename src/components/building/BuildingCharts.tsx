@@ -27,6 +27,9 @@ function CombinedMetricsChart({
   const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
   const energyDeviceId = getPrimarySensorDevice(buildingId, 'energy');
 
+  // DEBUG: show which device ids were resolved for this building (check browser console)
+  console.log('Primary sensor ids for building', buildingId, { tempDeviceId, humidityDeviceId, energyDeviceId });
+  
   const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval, tempDeviceId);
   const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval, humidityDeviceId);
   const { data: energyData, loading: energyLoading } = useHistoricalEnergyData(
