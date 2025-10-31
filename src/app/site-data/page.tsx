@@ -4,6 +4,7 @@ import { useSiteEnergyData } from '@/hooks/useSiteEnergyData';
 import { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { getBuildingById } from '@/lib/buildings';
+import TimeSeriesChart from '@/components/charts/TimeSeriesChart';
 
 function TimePeriodSelector({ 
   value, 
@@ -303,6 +304,75 @@ export default function SiteDataPage() {
   const [timeRange, setTimeRange] = useState('-24h');
   const { data, loading, error } = useSiteEnergyData(timeRange, 10000);
 
+  // Build total timeseries for gas or oil by attempting:
+  // 1) data.timeSeries[type] (common server-side shape)
+  // 2) sum per-building series when each building exposes a series array
+  // 3) fallback to a single-point series using data.totalGas / data.totalOil
+  const buildTotalSeries = (type: 'gas' | 'oil') => {
+    // try top-level timeSeries.<type>
+    const tsRoot = (data as any)?.timeSeries;
+    if (tsRoot && Array.isArray(tsRoot[type])) {
+      return (tsRoot[type] as any[]).map(p => ({ timestamp: p.timestamp, value: p.value ?? 0 }));
+    }
+
+    // attempt to locate per-building series arrays that match the type
+    const perBuildingSeries: { timestamp: string; value: number }[][] = [];
+
+    if (Array.isArray(data.buildingBreakdown)) {
+      data.buildingBreakdown.forEach((b: any) => {
+        // inspect keys for an array of {timestamp, value}
+        for (const key of Object.keys(b || {})) {
+          const val = b[key];
+          if (!Array.isArray(val) || val.length === 0) continue;
+          const first = val[0];
+          if (!first || typeof first.timestamp !== 'string') continue;
+          // check if items look like time series points
+          if (typeof first.value === 'number') {
+            // prefer keys that include the type name (e.g., "gas", "oil")
+            if (key.toLowerCase().includes(type)) {
+              perBuildingSeries.push(val.map((p: any) => ({ timestamp: p.timestamp, value: p.value ?? 0 })));
+              break;
+            }
+            // if no explicit key-match, still accept as a candidate (only if no explicit found)
+            perBuildingSeries.push(val.map((p: any) => ({ timestamp: p.timestamp, value: p.value ?? 0 })));
+            break;
+          }
+        }
+      });
+    }
+
+    if (perBuildingSeries.length > 0) {
+      const map = new Map<string, number>();
+      perBuildingSeries.forEach(series => {
+        series.forEach(pt => {
+          map.set(pt.timestamp, (map.get(pt.timestamp) || 0) + (pt.value || 0));
+        });
+      });
+      const arr = Array.from(map.entries()).map(([timestamp, value]) => ({ timestamp, value }));
+      arr.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      return arr;
+    }
+
+    // fallback: single-point series using the aggregate totals
+    const total = type === 'gas' ? (data.totalGas || 0) : (data.totalOil || 0);
+    return [{ timestamp: new Date().toISOString(), value: total }];
+  };
+
+  const gasSeries = buildTotalSeries('gas');
+  const oilSeries = buildTotalSeries('oil');
+
+  // Merge gas + oil into a single "fossil" series summing values by timestamp
+  const mergeSeries = (a: { timestamp: string; value: number }[], b: { timestamp: string; value: number }[]) => {
+    const map = new Map<string, number>();
+    a.forEach(pt => map.set(pt.timestamp, (map.get(pt.timestamp) || 0) + (pt.value || 0)));
+    b.forEach(pt => map.set(pt.timestamp, (map.get(pt.timestamp) || 0) + (pt.value || 0)));
+    const merged = Array.from(map.entries()).map(([timestamp, value]) => ({ timestamp, value }));
+    merged.sort((x, y) => new Date(x.timestamp).getTime() - new Date(y.timestamp).getTime());
+    return merged;
+  };
+
+  const fossilSeries = mergeSeries(gasSeries, oilSeries);
+
   if (loading && !data.totalGas && !data.totalElectricity && !data.totalOil) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -329,8 +399,8 @@ export default function SiteDataPage() {
   const fossilTotal = (data.totalGas || 0) + (data.totalOil || 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 w-full">
+      <div className="w-full px-4 py-8">
         {/* Header with Time Selector */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-4">
@@ -367,6 +437,18 @@ export default function SiteDataPage() {
             color="#8b5e3c"
             icon="🛢️"
             timeRange={timeRange}
+          />
+        </div>
+
+        {/* Time series charts for total Gas and total Oil (summed across devices) */}
+        <div className="mb-8 w-full">
+          <TimeSeriesChart
+            data={fossilSeries}
+            title="Total Fossil Fuel — All Devices (Gas + Oil)"
+            unit=" kWh"
+            color="#c2410c"
+            loading={loading}
+            height={420}
           />
         </div>
 

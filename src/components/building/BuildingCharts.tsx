@@ -27,9 +27,6 @@ function CombinedMetricsChart({
   const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
   const energyDeviceId = getPrimarySensorDevice(buildingId, 'energy');
 
-  // DEBUG: show which device ids were resolved for this building (check browser console)
-  console.log('Primary sensor ids for building', buildingId, { tempDeviceId, humidityDeviceId, energyDeviceId });
-  
   const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', timeRange, interval, tempDeviceId);
   const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', timeRange, interval, humidityDeviceId);
   const { data: energyData, loading: energyLoading } = useHistoricalEnergyData(
@@ -58,135 +55,77 @@ function CombinedMetricsChart({
 
     const timestamps = Array.from(allTimestamps).sort();
 
-    // Prepare series data
+    // Prepare series data and yAxis together so indices match
     const series: echarts.SeriesOption[] = [];
-
-    if (tempDeviceId && tempData.length > 0) {
-      series.push({
-        name: 'Temperature',
-        type: 'line',
-        yAxisIndex: 0,
-        data: tempData.map(d => d.value),
-        smooth: true,
-        lineStyle: {
-          color: '#e74c3c',
-          width: 2
-        },
-        itemStyle: {
-          color: '#e74c3c'
-        },
-        symbol: 'circle',
-        symbolSize: 6
-      });
-    }
-
-    if (humidityDeviceId && humidityData.length > 0) {
-      series.push({
-        name: 'Humidity',
-        type: 'line',
-        yAxisIndex: 1,
-        data: humidityData.map(d => d.value),
-        smooth: true,
-        lineStyle: {
-          color: '#3498db',
-          width: 2
-        },
-        itemStyle: {
-          color: '#3498db'
-        },
-        symbol: 'circle',
-        symbolSize: 6
-      });
-    }
-
-    if (energyDeviceId && energyData.length > 0) {
-      series.push({
-        name: 'Energy',
-        type: 'line',
-        yAxisIndex: 2,
-        data: energyData.map(d => d.value),
-        smooth: true,
-        lineStyle: {
-          color: '#f39c12',
-          width: 2
-        },
-        itemStyle: {
-          color: '#f39c12'
-        },
-        symbol: 'circle',
-        symbolSize: 6
-      });
-    }
-
-    // Build y-axes dynamically
     const yAxis: echarts.YAXisComponentOption[] = [];
 
-    if (tempDeviceId && tempData.length > 0) {
-      yAxis.push({
-        type: 'value',
-        name: 'Temperature (°C)',
-        position: 'left',
-        axisLabel: {
-          formatter: '{value}°C',
-          color: '#e74c3c'
-        },
-        axisLine: {
-          lineStyle: {
-            color: '#e74c3c'
-          }
-        },
-        splitLine: {
-          show: false
-        }
-      });
-    }
+    // track how many right-side axes to compute offsets
+    let rightAxisCount = 0;
 
-    if (humidityDeviceId && humidityData.length > 0) {
-      yAxis.push({
-        type: 'value',
-        name: 'Humidity (%)',
-        position: 'right',
-        offset: tempDeviceId && tempData.length > 0 ? 0 : 0,
-        axisLabel: {
-          formatter: '{value}%',
-          color: '#3498db'
-        },
-        axisLine: {
-          lineStyle: {
-            color: '#3498db'
-          }
-        },
-        splitLine: {
-          show: false
-        }
-      });
-    }
+    const addMetric = (
+      deviceId: string | undefined,
+      data: { timestamp: string; value: number }[],
+      name: string,
+      unitName: string,
+      color: string,
+      position: 'left' | 'right'
+    ) => {
+      if (!deviceId || data.length === 0) return;
 
-    if (energyDeviceId && energyData.length > 0) {
-      const offset = (tempDeviceId && tempData.length > 0 ? 1 : 0) + (humidityDeviceId && humidityData.length > 0 ? 1 : 0);
+      const axisIndex = yAxis.length;
+
+      // compute offset for right-side axes (space them so they don't overlap)
+      let offset = 0;
+      if (position === 'right') {
+        offset = rightAxisCount > 0 ? 60 * rightAxisCount : 0;
+        rightAxisCount += 1;
+      }
+
       yAxis.push({
         type: 'value',
-        name: 'Energy (kWh)',
-        position: 'right',
-        offset: offset > 1 ? 60 : 0,
+        name: `${name} ${unitName}`,
+        position,
+        offset,
         axisLabel: {
-          formatter: '{value} kWh',
-          color: '#f39c12'
+          formatter: position === 'left' ? (position === 'left' ? (unitName.includes('°') ? '{value}°C' : `{value}${unitName}`) : `{value}${unitName}`) : `{value}${unitName}`,
+          color
         },
         axisLine: {
           lineStyle: {
-            color: '#f39c12'
+            color
           }
         },
         splitLine: {
-          show: true,
+          show: name === 'Energy',
           lineStyle: {
             type: 'dashed',
             opacity: 0.3
           }
         }
       });
-    }
+
+      series.push({
+        name,
+        type: 'line',
+        yAxisIndex: axisIndex,
+        data: data.map(d => d.value),
+        smooth: true,
+        lineStyle: {
+          color,
+          width: 2
+        },
+        itemStyle: {
+          color
+        },
+        symbol: 'circle',
+        symbolSize: 6
+      });
+    };
+
+    // Add metrics in desired order and with proper positions
+    addMetric(tempDeviceId, tempData, 'Temperature', '(°C)', '#e74c3c', 'left');
+    addMetric(humidityDeviceId, humidityData, 'Humidity', '(%)', '#3498db', 'right');
+    addMetric(energyDeviceId, energyData, 'Energy', '(kWh)', '#f39c12', 'right');
 
     const option: echarts.EChartsOption = {
       title: {
@@ -203,11 +142,21 @@ function CombinedMetricsChart({
           type: 'cross'
         },
         formatter: (params: any) => {
+          if (!Array.isArray(params) || params.length === 0) return '';
           let tooltip = `<strong>${params[0].axisValue}</strong><br/>`;
           params.forEach((param: any) => {
-            const unit = param.seriesName === 'Temperature' ? '°C' : 
+            // safe value extraction
+            const rawVal = param.value;
+            const val =
+              typeof rawVal === 'number'
+                ? rawVal
+                : Array.isArray(rawVal)
+                ? (rawVal[1] ?? rawVal[0])
+                : Number(rawVal) || 0;
+
+            const unit = param.seriesName === 'Temperature' ? '°C' :
                         param.seriesName === 'Humidity' ? '%' : 'kWh';
-            tooltip += `${param.marker} ${param.seriesName}: ${param.value.toFixed(2)}${unit}<br/>`;
+            tooltip += `${param.marker} ${param.seriesName}: ${val.toFixed(2)}${unit}<br/>`;
           });
           return tooltip;
         }
@@ -233,8 +182,8 @@ function CombinedMetricsChart({
         },
         boundaryGap: false
       },
-      yAxis: yAxis,
-      series: series,
+      yAxis,
+      series,
       dataZoom: [
         {
           type: 'inside',

@@ -77,6 +77,10 @@ export function useSiteEnergyData(
         setLoading(true);
         const interval = getInterval(timeRange);
 
+        // accumulate per-timestamp totals for site-level timeSeries
+        const gasTimeMap = new Map<string, number>();
+        const oilTimeMap = new Map<string, number>();
+
         // Fetch electricity from site meter
         let electricityValue: number | null = null;
         const electricityDevice = getSiteElectricityDevice();
@@ -95,7 +99,7 @@ export function useSiteEnergyData(
           // Sum all values to get total consumption over the period
           if (elecData.length > 0) {
             const totalPulses = elecData.reduce((sum, point) => sum + point.value, 0);
-            electricityValue = totalPulses * electricityDevice.conversionFactor;
+            electricityValue = totalPulses * (electricityDevice.conversionFactor || 1);
           }
         }
 
@@ -126,8 +130,15 @@ export function useSiteEnergyData(
           let gasUsage: number | null = null;
           if (gasData.length > 0) {
             const totalPulses = gasData.reduce((sum, point) => sum + point.value, 0);
-            gasUsage = totalPulses * device.conversionFactor;
+            gasUsage = totalPulses * (device.conversionFactor ?? 1);
             totalGasValue += gasUsage;
+
+            // accumulate per-timestamp (apply conversion factor per point)
+            const cf = device.conversionFactor ?? 1;
+            gasData.forEach(pt => {
+              const t = pt.timestamp;
+              gasTimeMap.set(t, (gasTimeMap.get(t) || 0) + (pt.value * cf));
+            });
           }
 
           const entry = breakdownMap.get(device.buildingId) ?? {
@@ -156,8 +167,15 @@ export function useSiteEnergyData(
           let oilUsage: number | null = null;
           if (oilData.length > 0) {
             const totalPulses = oilData.reduce((sum, point) => sum + point.value, 0);
-            oilUsage = totalPulses * device.conversionFactor;
+            oilUsage = totalPulses * (device.conversionFactor ?? 1);
             totalOilValue += oilUsage;
+
+            // accumulate per-timestamp (apply conversion factor per point)
+            const cf = device.conversionFactor ?? 1;
+            oilData.forEach(pt => {
+              const t = pt.timestamp;
+              oilTimeMap.set(t, (oilTimeMap.get(t) || 0) + (pt.value * cf));
+            });
           }
 
           const entry = breakdownMap.get(device.buildingId) ?? {
@@ -170,6 +188,15 @@ export function useSiteEnergyData(
           breakdownMap.set(device.buildingId, entry);
         }
 
+        // build sorted arrays from the timestamp maps
+        const buildSeriesFromMap = (m: Map<string, number>) => {
+          const arr = Array.from(m.entries()).map(([timestamp, value]) => ({ timestamp, value }));
+          arr.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          return arr;
+        };
+        const gasSeries = buildSeriesFromMap(gasTimeMap);
+        const oilSeries = buildSeriesFromMap(oilTimeMap);
+
         const buildingBreakdown = Array.from(breakdownMap.values());
 
         setData({
@@ -179,9 +206,14 @@ export function useSiteEnergyData(
           // sort by combined gas + oil (descending)
           buildingBreakdown: buildingBreakdown.sort((a, b) =>
             ((b.gasUsage || 0) + (b.oilUsage || 0)) - ((a.gasUsage || 0) + (a.oilUsage || 0))
-          )
+          ),
+          // add site-level timeseries so the client can render historical charts
+          timeSeries: {
+            gas: gasSeries,
+            oil: oilSeries
+          }
         });
-
+        
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');

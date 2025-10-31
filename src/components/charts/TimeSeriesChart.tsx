@@ -14,6 +14,7 @@ interface TimeSeriesChartProps {
   unit: string;
   color?: string;
   loading?: boolean;
+  height?: number; // added optional height
 }
 
 export default function TimeSeriesChart({ 
@@ -21,7 +22,8 @@ export default function TimeSeriesChart({
   title, 
   unit, 
   color = '#3498db',
-  loading = false 
+  loading = false,
+  height = 300
 }: TimeSeriesChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
@@ -29,16 +31,33 @@ export default function TimeSeriesChart({
   useEffect(() => {
     if (!chartRef.current) return;
 
-    // Initialize chart
-    if (!chartInstance.current) {
+    const existing = echarts.getInstanceByDom(chartRef.current);
+    if (!chartInstance.current || (existing && chartInstance.current !== existing)) {
+      chartInstance.current = existing || echarts.init(chartRef.current);
+    }
+    if ((chartInstance.current as any)?.disposed) {
       chartInstance.current = echarts.init(chartRef.current);
     }
 
-    // Prepare data
-    const timestamps = data.map(d => d.timestamp);
-    const values = data.map(d => d.value);
+    // sort data by timestamp and convert to [time, value] pairs for time axis
+    const sorted = [...data].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    const seriesData = sorted.map(d => [new Date(d.timestamp).getTime(), d.value]);
 
-    // Chart configuration
+    const rangeMs = sorted.length > 1
+      ? new Date(sorted[sorted.length - 1].timestamp).getTime() - new Date(sorted[0].timestamp).getTime()
+      : 0;
+
+    // helper to format time based on span
+    const fmt = (value: number) => {
+      const f = (echarts.format as any)?.formatTime ?? ((pattern: string, t: number) => new Date(t).toLocaleString());
+      if (rangeMs >= 1000 * 60 * 60 * 24 * 365) return f('yyyy-MM', value);
+      if (rangeMs >= 1000 * 60 * 60 * 24 * 30) return f('yyyy-MM-dd', value);
+      if (rangeMs >= 1000 * 60 * 60 * 24 * 7) return f('MMM dd', value);
+      if (rangeMs >= 1000 * 60 * 60 * 24) return f('MMM dd\nHH:mm', value);
+      if (rangeMs >= 1000 * 60 * 60) return f('MMM dd\nHH:mm', value);
+      return f('HH:mm', value);
+    };
+
     const option: echarts.EChartsOption = {
       title: {
         text: title,
@@ -50,9 +69,13 @@ export default function TimeSeriesChart({
       },
       tooltip: {
         trigger: 'axis',
+        axisPointer: { type: 'cross' },
         formatter: (params: any) => {
-          const param = params[0];
-          return `${param.axisValue}<br/>${param.seriesName}: ${param.value}${unit}`;
+          const p = Array.isArray(params) ? params[0] : params;
+          const val = Array.isArray(p.value) ? p.value[1] : p.value;
+          const t = Array.isArray(p.value) ? p.value[0] : p.axisValue;
+          const timeLabel = new Date(t).toLocaleString();
+          return `${timeLabel}<br/>${p.seriesName}: ${val}${unit}`;
         }
       },
       grid: {
@@ -62,11 +85,19 @@ export default function TimeSeriesChart({
         bottom: '80px'
       },
       xAxis: {
-        type: 'category',
-        data: timestamps,
+        type: 'time',
         axisLabel: {
-          rotate: 45,
-          fontSize: 10
+          formatter: (value: number) => fmt(value),
+          rotate: 0,
+          fontSize: 11
+        },
+        axisPointer: {
+          label: {
+            formatter: (params: any) => {
+              const v = params.value;
+              return fmt(v);
+            }
+          }
         }
       },
       yAxis: {
@@ -82,8 +113,9 @@ export default function TimeSeriesChart({
         {
           name: title,
           type: 'line',
-          data: values,
+          data: seriesData,
           smooth: true,
+          encode: { x: 0, y: 1 },
           lineStyle: {
             color: color,
             width: 2
@@ -104,8 +136,7 @@ export default function TimeSeriesChart({
           type: 'inside',
           start: 0,
           end: 100,
-          zoomOnMouseWheel: true,
-          moveOnMouseMove: true
+          realtime: true
         },
         {
           type: 'slider',
@@ -117,29 +148,33 @@ export default function TimeSeriesChart({
       ]
     };
 
-    chartInstance.current.setOption(option);
+    const inst = chartRef.current ? (echarts.getInstanceByDom(chartRef.current) || chartInstance.current) : chartInstance.current;
+    if (!inst) return;
 
-    // Handle window resize
-    const handleResize = () => {
-      chartInstance.current?.resize();
-    };
+    if ((inst as any)?.disposed) {
+      chartInstance.current = echarts.init(chartRef.current!);
+      chartInstance.current.setOption(option);
+    } else {
+      inst.setOption(option);
+      chartInstance.current = inst;
+    }
+
+    const handleResize = () => { chartInstance.current?.resize(); };
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [data, title, unit, color]);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [data, title, unit, color, height]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      chartInstance.current?.dispose();
+      try { chartInstance.current?.dispose(); } catch {}
+      chartInstance.current = null;
     };
   }, []);
 
   if (loading) {
     return (
-      <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
+      <div className="h-64 flex items-center justify-center bg-gray-50 rounded" style={{ width: '100%' }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-400">Loading chart data...</p>
@@ -150,11 +185,11 @@ export default function TimeSeriesChart({
 
   if (data.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
+      <div className="h-64 flex items-center justify-center bg-gray-50 rounded" style={{ width: '100%' }}>
         <p className="text-gray-400">No data available</p>
       </div>
     );
   }
 
-  return <div ref={chartRef} style={{ width: '100%', height: '300px' }} />;
+  return <div ref={chartRef} style={{ width: '100%', height: `${height}px`, maxWidth: '100%' }} />;
 }
