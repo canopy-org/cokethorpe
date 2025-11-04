@@ -90,7 +90,6 @@ export function useHistoricalEnergyData(
               value: point.value / building.area
             }));
             // overwrite convertedData to normalized
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             convertedData.splice(0, convertedData.length, ...normalized);
            }
          }
