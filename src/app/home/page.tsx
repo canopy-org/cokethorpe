@@ -231,7 +231,7 @@ export default function Home() {
         .building-tooltip {
           position: absolute;
           top: 50%;
-          left: calc(100% + 15px);
+          left: calc(100% + 5px);
           transform: translateY(-50%);
           background: rgba(30, 41, 59, 0.98);
           border: 2px solid rgba(255, 255, 255, 0.3);
@@ -336,7 +336,7 @@ export default function Home() {
           content: '';
           position: absolute;
           top: 50%;
-          left: -10px;
+          left: -7px;
           transform: translateY(-50%);
           width: 0;
           height: 0;
@@ -349,7 +349,7 @@ export default function Home() {
           content: '';
           position: absolute;
           top: 50%;
-          left: -7px;
+          left: -5px;
           transform: translateY(-50%);
           width: 0;
           height: 0;
