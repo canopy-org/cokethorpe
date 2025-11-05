@@ -54,8 +54,16 @@ export default function SettingsPage() {
                 router.push('/home');
             }, 2000);
         } catch (err) {
-            setError('An error occurred');
-        } finally {
+            // Same solution as above - either:
+            // Option 1: Remove the variable
+        } catch {
+            // ...your error handling...
+        }
+        // Or Option 2: Prefix with underscore
+        } catch (_err) {
+            // ...your error handling...
+        }
+        finally {
             setLoading(false);
         }
     };
