@@ -54,16 +54,8 @@ export default function SettingsPage() {
                 router.push('/home');
             }, 2000);
         } catch (err) {
-            // Same solution as above - either:
-            // Option 1: Remove the variable
-        } catch {
-            // ...your error handling...
-        }
-        // Or Option 2: Prefix with underscore
-        } catch (_err) {
-            // ...your error handling...
-        }
-        finally {
+            setError('Failed to change password');
+        } finally {
             setLoading(false);
         }
     };
