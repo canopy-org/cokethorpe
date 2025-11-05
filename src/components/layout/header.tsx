@@ -18,18 +18,18 @@ export default function Header() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const pathname = usePathname(); // This will trigger re-fetch on route change
+    const pathname = usePathname();
 
     // Fetch current user on mount AND when route changes
     useEffect(() => {
         fetchUser();
-    }, [pathname]); // Re-fetch when pathname changes
+    }, [pathname]);
 
     const fetchUser = async () => {
         try {
             const res = await fetch('/api/auth/me', {
-                credentials: 'include', // Important: include cookies
-                cache: 'no-store' // Don't cache this request
+                credentials: 'include',
+                cache: 'no-store'
             });
             if (res.ok) {
                 const data = await res.json();
@@ -49,7 +49,7 @@ export default function Header() {
         try {
             await fetch('/api/auth/logout', { method: 'POST' });
             setUser(null);
-            window.location.href = '/login'; // Force full page reload
+            window.location.href = '/';
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -61,7 +61,7 @@ export default function Header() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo/Brand */}
                     <div className="flex items-center">
-                        <Link href="/" className="text-xl font-bold hover:text-blue-400 transition">
+                        <Link href={user ? "/home" : "/"} className="text-xl font-bold hover:text-blue-400 transition">
                             Cokethorpe Energy
                         </Link>
                     </div>
@@ -70,7 +70,7 @@ export default function Header() {
                     {user && (
                         <nav className="flex items-center gap-6">
                             <Link
-                                href="/"
+                                href="/home"
                                 className="hover:text-blue-400 transition font-medium"
                             >
                                 Home
@@ -134,21 +134,38 @@ export default function Header() {
                         {loading ? (
                             <div className="w-20 h-10 bg-slate-700 rounded animate-pulse"></div>
                         ) : user ? (
-                            <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                    <div className="text-sm font-medium">{user.name || user.email}</div>
-                                    <div className="text-xs text-slate-400 capitalize">{user.role}</div>
-                                </div>
-                                <button
-                                    onClick={handleLogout}
-                                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition"
-                                >
-                                    Logout
+                            <div className="relative group">
+                                <button className="flex items-center gap-2 hover:text-blue-400 transition py-2">
+                                    <div className="text-right">
+                                        <div className="text-sm font-medium">{user.name || user.email}</div>
+                                        <div className="text-xs text-slate-400 capitalize">{user.role}</div>
+                                    </div>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
                                 </button>
+
+                                {/* User Dropdown Menu - No gap */}
+                                <div className="hidden group-hover:block absolute right-0 top-full pt-1 w-48 z-50">
+                                    <div className="bg-slate-700 rounded-lg shadow-xl">
+                                        <Link
+                                            href="/settings"
+                                            className="block px-4 py-2 hover:bg-slate-600 transition rounded-t-lg"
+                                        >
+                                            Change Password
+                                        </Link>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full text-left px-4 py-2 hover:bg-slate-600 transition rounded-b-lg text-red-300"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <Link
-                                href="/login"
+                                href="/"
                                 className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition"
                             >
                                 Login

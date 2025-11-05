@@ -51,7 +51,7 @@ export function useEnergyData(
         
         if (pulseValue !== null) {
           // Convert pulses to energy using device-specific conversion factor
-          const conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
+          const conversionFactor = getDeviceConversionFactor(buildingId, deviceId)||1;
           let energyValue = pulseValue * conversionFactor;
           
           // If normalized, divide by building area

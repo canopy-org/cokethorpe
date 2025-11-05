@@ -7,6 +7,8 @@ export default function AdminUsersPage() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreate, setShowCreate] = useState(false);
+    const [resetPasswordUserId, setResetPasswordUserId] = useState<number | null>(null);
+    const [newPassword, setNewPassword] = useState('');
     const router = useRouter();
 
     useEffect(() => {
@@ -18,7 +20,7 @@ export default function AdminUsersPage() {
             const res = await fetch('/api/admin/users');
             if (!res.ok) {
                 if (res.status === 403) {
-                    router.push('/site-data');
+                    router.push('/home');
                     return;
                 }
                 throw new Error('Failed to fetch users');
@@ -95,6 +97,38 @@ export default function AdminUsersPage() {
             }
         } catch (error) {
             alert('Error deleting user');
+        }
+    };
+
+    const handleResetPassword = async (userId: number) => {
+        if (!newPassword) {
+            alert('Please enter a new password');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            alert('Password must be at least 8 characters');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newPassword })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert('Password reset successfully!');
+                setResetPasswordUserId(null);
+                setNewPassword('');
+            } else {
+                alert(data.error || 'Failed to reset password');
+            }
+        } catch (error) {
+            alert('Error resetting password');
         }
     };
 
@@ -185,19 +219,57 @@ export default function AdminUsersPage() {
                                         {user.active ? 'Active' : 'Disabled'}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 space-x-2">
-                                    <button
-                                        onClick={() => toggleUserStatus(user.id, user.active)}
-                                        className="text-blue-600 hover:underline text-sm"
-                                    >
-                                        {user.active ? 'Disable' : 'Enable'}
-                                    </button>
-                                    <button
-                                        onClick={() => deleteUser(user.id)}
-                                        className="text-red-600 hover:underline text-sm"
-                                    >
-                                        Delete
-                                    </button>
+                                <td className="px-6 py-4">
+                                    <div className="flex flex-col gap-2">
+                                        <div className="space-x-2">
+                                            <button
+                                                onClick={() => toggleUserStatus(user.id, user.active)}
+                                                className="text-blue-600 hover:underline text-sm"
+                                            >
+                                                {user.active ? 'Disable' : 'Enable'}
+                                            </button>
+                                            <button
+                                                onClick={() => setResetPasswordUserId(user.id)}
+                                                className="text-orange-600 hover:underline text-sm"
+                                            >
+                                                Reset Password
+                                            </button>
+                                            <button
+                                                onClick={() => deleteUser(user.id)}
+                                                className="text-red-600 hover:underline text-sm"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+
+                                        {resetPasswordUserId === user.id && (
+                                            <div className="flex gap-2 mt-2">
+                                                <input
+                                                    type="password"
+                                                    placeholder="New password (min 8 chars)"
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                    className="flex-1 px-3 py-1 border rounded text-sm"
+                                                    minLength={8}
+                                                />
+                                                <button
+                                                    onClick={() => handleResetPassword(user.id)}
+                                                    className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700"
+                                                >
+                                                    Set
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setResetPasswordUserId(null);
+                                                        setNewPassword('');
+                                                    }}
+                                                    className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))}
