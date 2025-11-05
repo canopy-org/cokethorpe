@@ -31,32 +31,14 @@ export default function TimeSeriesChart({
   useEffect(() => {
     if (!chartRef.current) return;
 
-    const existing = echarts.getInstanceByDom(chartRef.current);
-    if (!chartInstance.current || (existing && chartInstance.current !== existing)) {
-      chartInstance.current = existing || echarts.init(chartRef.current);
-    }
-    if ((chartInstance.current as any)?.disposed) {
+    // Initialize chart
+    if (!chartInstance.current) {
       chartInstance.current = echarts.init(chartRef.current);
     }
 
-    // sort data by timestamp and convert to [time, value] pairs for time axis
+    // sort data by timestamp
     const sorted = [...data].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     const seriesData = sorted.map(d => [new Date(d.timestamp).getTime(), d.value]);
-
-    const rangeMs = sorted.length > 1
-      ? new Date(sorted[sorted.length - 1].timestamp).getTime() - new Date(sorted[0].timestamp).getTime()
-      : 0;
-
-    // helper to format time based on span
-    const fmt = (value: number) => {
-      const f = (echarts.format as any)?.formatTime ?? ((pattern: string, t: number) => new Date(t).toLocaleString());
-      if (rangeMs >= 1000 * 60 * 60 * 24 * 365) return f('yyyy-MM', value);
-      if (rangeMs >= 1000 * 60 * 60 * 24 * 30) return f('yyyy-MM-dd', value);
-      if (rangeMs >= 1000 * 60 * 60 * 24 * 7) return f('MMM dd', value);
-      if (rangeMs >= 1000 * 60 * 60 * 24) return f('MMM dd\nHH:mm', value);
-      if (rangeMs >= 1000 * 60 * 60) return f('MMM dd\nHH:mm', value);
-      return f('HH:mm', value);
-    };
 
     const option: echarts.EChartsOption = {
       title: {
@@ -69,14 +51,7 @@ export default function TimeSeriesChart({
       },
       tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'cross' },
-        formatter: (params: any) => {
-          const p = Array.isArray(params) ? params[0] : params;
-          const val = Array.isArray(p.value) ? p.value[1] : p.value;
-          const t = Array.isArray(p.value) ? p.value[0] : p.axisValue;
-          const timeLabel = new Date(t).toLocaleString();
-          return `${timeLabel}<br/>${p.seriesName}: ${val}${unit}`;
-        }
+        axisPointer: { type: 'cross' }
       },
       grid: {
         left: '50px',
@@ -87,17 +62,8 @@ export default function TimeSeriesChart({
       xAxis: {
         type: 'time',
         axisLabel: {
-          formatter: (value: number) => fmt(value),
-          rotate: 0,
-          fontSize: 11
-        },
-        axisPointer: {
-          label: {
-            formatter: (params: any) => {
-              const v = params.value;
-              return fmt(v);
-            }
-          }
+          rotate: 45,
+          fontSize: 10
         }
       },
       yAxis: {
@@ -115,7 +81,6 @@ export default function TimeSeriesChart({
           type: 'line',
           data: seriesData,
           smooth: true,
-          encode: { x: 0, y: 1 },
           lineStyle: {
             color: color,
             width: 2
@@ -136,7 +101,8 @@ export default function TimeSeriesChart({
           type: 'inside',
           start: 0,
           end: 100,
-          realtime: true
+          zoomOnMouseWheel: true,
+          moveOnMouseMove: true
         },
         {
           type: 'slider',
@@ -148,18 +114,11 @@ export default function TimeSeriesChart({
       ]
     };
 
-    const inst = chartRef.current ? (echarts.getInstanceByDom(chartRef.current) || chartInstance.current) : chartInstance.current;
-    if (!inst) return;
+    chartInstance.current.setOption(option);
 
-    if ((inst as any)?.disposed) {
-      chartInstance.current = echarts.init(chartRef.current!);
-      chartInstance.current.setOption(option);
-    } else {
-      inst.setOption(option);
-      chartInstance.current = inst;
-    }
-
-    const handleResize = () => { chartInstance.current?.resize(); };
+    const handleResize = () => { 
+      chartInstance.current?.resize(); 
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [data, title, unit, color, height]);

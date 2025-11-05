@@ -63,6 +63,7 @@ function SiteMetricCard({
       '-7d': 'Last 7 Days',
       '-30d': 'Last 30 Days',
       '-90d': 'Last 90 Days',
+      '-365d': 'Last 12 Months'
     };
     return labels[range] || range;
   };
