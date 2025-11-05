@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import WeatherWidget from './WeatherWidget';
 import { buildings } from '@/lib/buildings';
 
@@ -17,7 +17,6 @@ export default function Header() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
     const pathname = usePathname();
 
     // Fetch current user on mount AND when route changes

@@ -213,7 +213,7 @@ function CombinedMetricsChart({
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [tempData, humidityData, energyData, timeRange, loading, buildingId]);
+  }, [energyDeviceId, humidityDeviceId, tempDeviceId, tempData, humidityData, energyData, timeRange, loading, buildingId]); // Added missing dependencies
 
   // Cleanup on unmount ONLY
   useEffect(() => {

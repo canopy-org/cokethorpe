@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminUsersPage() {
@@ -11,11 +11,7 @@ export default function AdminUsersPage() {
     const [newPassword, setNewPassword] = useState('');
     const router = useRouter();
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         try {
             const res = await fetch('/api/admin/users');
             if (!res.ok) {
@@ -32,7 +28,11 @@ export default function AdminUsersPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [router]);
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
 
     const handleCreateUser = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -63,7 +63,7 @@ export default function AdminUsersPage() {
             } else {
                 alert(data.error || 'Failed to create user');
             }
-        } catch (error) {
+        } catch {
             alert('Error creating user');
         }
     };
@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
             if (res.ok) {
                 fetchUsers();
             }
-        } catch (error) {
+        } catch {
             alert('Error updating user');
         }
     };
@@ -95,7 +95,7 @@ export default function AdminUsersPage() {
             if (res.ok) {
                 fetchUsers();
             }
-        } catch (error) {
+        } catch {
             alert('Error deleting user');
         }
     };
@@ -127,7 +127,7 @@ export default function AdminUsersPage() {
             } else {
                 alert(data.error || 'Failed to reset password');
             }
-        } catch (error) {
+        } catch {
             alert('Error resetting password');
         }
     };
