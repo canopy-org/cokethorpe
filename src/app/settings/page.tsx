@@ -53,7 +53,7 @@ export default function SettingsPage() {
             setTimeout(() => {
                 router.push('/home');
             }, 2000);
-        } catch (err) {
+        } catch {
             setError('Failed to change password');
         } finally {
             setLoading(false);
