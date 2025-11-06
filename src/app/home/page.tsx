@@ -36,6 +36,7 @@ function BuildingMarker({
     else if (selectedMetric === 'humidity') displayValue = humidity;
     else if (selectedMetric === 'energy') displayValue = energyNormalized;
     else if (selectedMetric === 'battery') displayValue = battery;
+    else if (selectedMetric === 'power') displayValue = energyRate;
 
     const backgroundColor = displayValue !== null
         ? getColorForMetric(displayValue, selectedMetric)
@@ -454,6 +455,17 @@ export default function Home() {
                         onChange={(e) => setSelectedMetric(e.target.value as SensorType)}
                     />
                     <label htmlFor="humidity-radio">Humidity</label>
+                </div>
+                <div className="legend-option">
+                    <input
+                        type="radio"
+                        id="power-radio"
+                        name="metric"
+                        value="power"
+                        checked={selectedMetric === 'power'}
+                        onChange={(e) => setSelectedMetric(e.target.value as SensorType)}
+                    />
+                    <label htmlFor="power-radio">Power (kW)</label>
                 </div>
                 <div className="legend-option">
                     <input

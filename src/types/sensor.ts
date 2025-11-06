@@ -1,4 +1,4 @@
-export type SensorType = 'temperature' | 'humidity' | 'energy' | 'battery';
+export type SensorType = 'temperature' | 'humidity' | 'energy' | 'battery' | 'power';
 
 export interface SensorReading {
   buildingId: string;

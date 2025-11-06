@@ -23,6 +23,11 @@ export function getEnergyColor(energy: number): string {
   return 'rgba(39, 174, 96, 0.7)';                       // Full - Dark Green
 }
 
+export function getPowerColor(power: number): string {
+  if (power > 0) return 'rgba(243, 156, 18, 0.7)';    // On - Amber
+  return 'rgba(149, 165, 166, 0.5)';                 // off - grey
+}
+
 export function getColorForMetric(value: number, metric: SensorType): string {
   switch(metric) {
     case 'temperature':
@@ -31,6 +36,8 @@ export function getColorForMetric(value: number, metric: SensorType): string {
       return getHumidityColor(value);
     case 'energy':
       return getEnergyColor(value);
+    case 'power':
+      return getPowerColor(value);
     default:
       return 'rgba(149, 165, 166, 0.5)';
   }
@@ -44,6 +51,8 @@ export function getUnitForMetric(metric: SensorType): string {
       return '%';
     case 'energy':
       return 'kWh';
+    case 'power':
+      return 'kW';
     default:
       return '';
   }
