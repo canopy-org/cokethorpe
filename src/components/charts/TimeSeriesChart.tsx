@@ -131,24 +131,17 @@ export default function TimeSeriesChart({
     };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="h-64 flex items-center justify-center bg-gray-50 rounded" style={{ width: '100%' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading chart data...</p>
+  return (
+    <div className="relative">
+      <div ref={chartRef} style={{ width: '100%', height: `${height}px`, maxWidth: '100%' }} />
+      {loading && (
+        <div className="absolute inset-0 bg-white/75 flex items-center justify-center z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading chart data...</p>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  if (data.length === 0) {
-    return (
-      <div className="h-64 flex items-center justify-center bg-gray-50 rounded" style={{ width: '100%' }}>
-        <p className="text-gray-400">No data available</p>
-      </div>
-    );
-  }
-
-  return <div ref={chartRef} style={{ width: '100%', height: `${height}px`, maxWidth: '100%' }} />;
+      )}
+    </div>
+  );
 }

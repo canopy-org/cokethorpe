@@ -62,8 +62,7 @@ function SiteMetricCard({
       '-24h': 'Last 24 Hours',
       '-7d': 'Last 7 Days',
       '-30d': 'Last 30 Days',
-      '-90d': 'Last 90 Days',
-      '-365d': 'Last 12 Months'
+      '-90d': 'Last 12 Months'
     };
     return labels[range] || range;
   };
@@ -103,8 +102,7 @@ function BuildingComparisonChart({
       '-24h': 'Last 24 Hours',
       '-7d': 'Last 7 Days',
       '-30d': 'Last 30 Days',
-      '-90d': 'Last 90 Days',
-      '-365d': 'Last 12 Months'
+      '-90d': 'Last 12 Months'
     };
     return labels[range] || range;
   };
@@ -373,17 +371,6 @@ export default function SiteDataPage() {
   };
 
   const fossilSeries = mergeSeries(gasSeries, oilSeries);
-
-  if (loading && !data.totalGas && !data.totalElectricity && !data.totalOil) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading site data...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
