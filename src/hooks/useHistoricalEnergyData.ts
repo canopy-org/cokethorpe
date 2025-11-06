@@ -69,7 +69,7 @@ export function useHistoricalEnergyData(
         // 3) energyType → global constants (oil_kWh_L / gas_kWh_L)
         // 4) final fallback 1
         let conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
-        const deviceObj = getDeviceById(buildingId, deviceId) ?? getBuildingById(buildingId)?.devices?.find(d => d.deviceId === deviceId || d.id === deviceId);
+        const deviceObj = getDeviceById(buildingId, deviceId) ?? getBuildingById(buildingId)?.devices?.find(d => d.deviceId === deviceId);
         if (!conversionFactor || conversionFactor === 0) {
           conversionFactor = deviceObj?.conversionFactor ?? (deviceObj?.energyType === 'oil' ? oil_kWh_L : deviceObj?.energyType === 'gas' ? gas_kWh_L : 1);
         }
