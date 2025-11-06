@@ -14,7 +14,8 @@ export function useHistoricalEnergyData(
   timeRange: string = '-24h',
   interval: string = '15m',
   deviceId?: string,
-  calculationType: EnergyCalculationType = 'cumulative'
+  calculationType: EnergyCalculationType = 'cumulative',
+  stopTime?: string
 ) {
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +44,8 @@ export function useHistoricalEnergyData(
             'water',
             timeRange,
             interval,
-            deviceId
+            deviceId,
+            stopTime
           );
         } else {
           // For cumulative and normalized, use mean aggregation
@@ -53,12 +55,13 @@ export function useHistoricalEnergyData(
             'water',
             timeRange,
             interval,
-            deviceId
+            deviceId,
+            stopTime
           );
         }
 
         const csvData = await queryInfluxDB(query);
-        const parsed = parseHistoricalCSV(csvData, timeRange);
+        const parsed = parseHistoricalCSV(csvData);
         
         // DEBUG: show parsed raw points length
         console.log('useHistoricalEnergyData parsed points:', parsed.length, { buildingId, deviceId });
@@ -105,12 +108,12 @@ export function useHistoricalEnergyData(
     }
 
     fetchHistoricalData();
-  }, [buildingId, timeRange, interval, deviceId, calculationType]);
+  }, [buildingId, timeRange, interval, deviceId, calculationType, stopTime]);
 
   return { data, loading, error };
 }
 
-function parseHistoricalCSV(csv: string, timeRange: string): DataPoint[] {
+function parseHistoricalCSV(csv: string): DataPoint[] {
   const lines = csv.trim().split('\n');
   const dataPoints: DataPoint[] = [];
   
@@ -128,25 +131,9 @@ function parseHistoricalCSV(csv: string, timeRange: string): DataPoint[] {
       const value = parseFloat(values[6]);
       
       if (!isNaN(value) && timestamp) {
-        const date = new Date(timestamp);
-        
-        let formattedTime: string;
-        if (timeRange.includes('h')) {
-          formattedTime = date.toLocaleTimeString('en-GB', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          });
-        } else {
-          formattedTime = date.toLocaleDateString('en-GB', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-        }
-        
+        // Return ISO timestamp instead of formatted string for better processing
         dataPoints.push({
-          timestamp: formattedTime,
+          timestamp: timestamp,
           value: value
         });
       }

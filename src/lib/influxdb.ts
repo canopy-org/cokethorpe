@@ -24,6 +24,8 @@ export async function queryInfluxDB(query: string): Promise<string> {
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('InfluxDB error response:', errorText);
     throw new Error(`InfluxDB error: ${response.status}`);
   }
 
@@ -69,22 +71,39 @@ export function buildFluxQuery(
   `;
 }
 
+/**
+ * Build a historical Flux query with support for both relative and absolute time ranges
+ * @param timeRange - Either relative (e.g., "-24h") or absolute ISO timestamps (e.g., "2024-11-06T00:00:00Z")
+ * @param stopTime - Optional stop time for absolute ranges (ISO timestamp)
+ */
 export function buildHistoricalFluxQuery(
   bucket: string,
   measurement: string,
   field: string,
   timeRange: string,
   interval: string,
-  deviceId?: string
+  deviceId?: string,
+  stopTime?: string
 ): string {
 
   const deviceFilter = deviceId
     ? `|> filter(fn: (r) => r.Device == "${deviceId}")`
     : '';
   
+  // Build the range clause - handle both relative and absolute times
+  // For absolute times, ensure they're in RFC3339 format (remove milliseconds if present)
+  let rangeClause: string;
+  if (stopTime) {
+    const startFormatted = timeRange.replace(/\.\d{3}Z$/, 'Z'); // Remove milliseconds
+    const stopFormatted = stopTime.replace(/\.\d{3}Z$/, 'Z'); // Remove milliseconds
+    rangeClause = `range(start: ${startFormatted}, stop: ${stopFormatted})`;
+  } else {
+    rangeClause = `range(start: ${timeRange})`;
+  }
+  
   return `
     from(bucket: "${bucket}")
-      |> range(start: ${timeRange})
+      |> ${rangeClause}
       |> filter(fn: (r) => r._measurement == "${measurement}")
       |> filter(fn: (r) => r._field == "${field}")
       ${deviceFilter}
@@ -125,6 +144,8 @@ export function buildRateFluxQuery(
 /**
  * Build a historical Flux query with rate of change calculation
  * Returns the difference between consecutive readings over time
+ * @param timeRange - Either relative (e.g., "-24h") or absolute ISO timestamps (e.g., "2024-11-06T00:00:00Z")
+ * @param stopTime - Optional stop time for absolute ranges (ISO timestamp)
  */
 export function buildHistoricalRateFluxQuery(
   bucket: string,
@@ -132,16 +153,28 @@ export function buildHistoricalRateFluxQuery(
   field: string,
   timeRange: string,
   interval: string,
-  deviceId?: string
+  deviceId?: string,
+  stopTime?: string
 ): string {
 
   const deviceFilter = deviceId
     ? `|> filter(fn: (r) => r.Device == "${deviceId}")`
     : '';
   
+  // Build the range clause - handle both relative and absolute times
+  // For absolute times, ensure they're in RFC3339 format (remove milliseconds if present)
+  let rangeClause: string;
+  if (stopTime) {
+    const startFormatted = timeRange.replace(/\.\d{3}Z$/, 'Z'); // Remove milliseconds
+    const stopFormatted = stopTime.replace(/\.\d{3}Z$/, 'Z'); // Remove milliseconds
+    rangeClause = `range(start: ${startFormatted}, stop: ${stopFormatted})`;
+  } else {
+    rangeClause = `range(start: ${timeRange})`;
+  }
+  
   return `
     from(bucket: "${bucket}")
-      |> range(start: ${timeRange})
+      |> ${rangeClause}
       |> filter(fn: (r) => r._measurement == "${measurement}")
       |> filter(fn: (r) => r._field == "${field}")
       ${deviceFilter}

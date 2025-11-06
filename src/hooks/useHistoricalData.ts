@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { SensorType } from '@/types/sensor';
 import { queryInfluxDB, buildHistoricalFluxQuery, influxConfig } from '@/lib/influxdb';
 
 interface DataPoint {
@@ -8,30 +7,41 @@ interface DataPoint {
 }
 
 export function useHistoricalData(
-  metric: SensorType, 
+  metric: 'temperature' | 'humidity',
   timeRange: string = '-24h',
   interval: string = '15m',
-  deviceId?: string
+  deviceId?: string,
+  stopTime?: string
 ) {
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!deviceId) {
+      setData([]);
+      setLoading(false);
+      return;
+    }
+
     async function fetchHistoricalData() {
+      if (!deviceId) return;
       setLoading(true);
       try {
+        const field = metric === 'temperature' ? 'temperature' : 'humidity';
+        
         const query = buildHistoricalFluxQuery(
           influxConfig.bucket,
           'alldata',
-          metric,
+          field,
           timeRange,
           interval,
-          deviceId
+          deviceId,
+          stopTime
         );
 
         const csvData = await queryInfluxDB(query);
-        const parsed = parseHistoricalCSV(csvData, timeRange);
+        const parsed = parseHistoricalCSV(csvData);
         
         setData(parsed);
         setError(null);
@@ -44,12 +54,12 @@ export function useHistoricalData(
     }
 
     fetchHistoricalData();
-  }, [metric, timeRange, interval, deviceId]);
+  }, [metric, timeRange, interval, deviceId, stopTime]);
 
   return { data, loading, error };
 }
 
-function parseHistoricalCSV(csv: string, timeRange: string): DataPoint[] {
+function parseHistoricalCSV(csv: string): DataPoint[] {
   const lines = csv.trim().split('\n');
   const dataPoints: DataPoint[] = [];
   
@@ -67,25 +77,9 @@ function parseHistoricalCSV(csv: string, timeRange: string): DataPoint[] {
       const value = parseFloat(values[6]);
       
       if (!isNaN(value) && timestamp) {
-        const date = new Date(timestamp);
-        
-        let formattedTime: string;
-        if (timeRange.includes('h')) {
-          formattedTime = date.toLocaleTimeString('en-GB', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          });
-        } else {
-          formattedTime = date.toLocaleDateString('en-GB', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-        }
-        
+        // Return ISO timestamp for better processing
         dataPoints.push({
-          timestamp: formattedTime,
+          timestamp: timestamp,
           value: value
         });
       }
