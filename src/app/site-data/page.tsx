@@ -3,9 +3,10 @@
 import { useSiteEnergyData } from '@/hooks/useSiteEnergyData';
 import { useHistoricalData } from '@/hooks/useHistoricalData';
 import { useEffect, useRef, useState } from 'react';
-import * as echarts from 'echarts';
+import MultiMetricChart from '@/components/charts/MultiMetricChart';
 import { getBuildingById, siteConfig } from '@/lib/buildings';
 import DateRangePicker from '@/components/charts/DateRangePicker';
+import * as echarts from 'echarts';
 
 function SiteMetricCard({ 
   title, 
@@ -287,302 +288,6 @@ function BuildingComparisonChart({
   );
 }
 
-function SiteTimeSeriesChart({
-  energyData,
-  temperatureData,
-  period,
-  date,
-  aggregation,
-  loading
-}: {
-  energyData: { timestamp: string; value: number }[];
-  temperatureData: { timestamp: string; value: number }[];
-  period: 'day' | 'month' | 'year';
-  date: string;
-  aggregation: 'hourly' | 'daily' | 'monthly';
-  loading: boolean;
-}) {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const chartInstance = useRef<echarts.ECharts | null>(null);
-
-  useEffect(() => {
-    if (!chartRef.current || loading) return;
-
-    if (!chartInstance.current) {
-      chartInstance.current = echarts.init(chartRef.current);
-    }
-
-    // Determine if showing power or energy
-    const isPower = aggregation === 'hourly';
-    const energyLabel = isPower ? 'Power' : 'Fossil Fuel';
-    const energyUnit = isPower ? 'kW' : 'kWh';
-    const energyChartType = isPower ? 'line' : 'bar';
-
-    // Format title based on period
-    let title = '';
-    if (period === 'day') {
-      const dateObj = new Date(date);
-      title = `Site Energy & Temperature - ${dateObj.toLocaleDateString('en-GB', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })}`;
-    } else if (period === 'month') {
-      const [year, month] = date.split('-');
-      const dateObj = new Date(parseInt(year), parseInt(month) - 1);
-      title = `Site Energy & Temperature - ${dateObj.toLocaleDateString('en-GB', { 
-        year: 'numeric', 
-        month: 'long' 
-      })}`;
-    } else {
-      title = `Site Energy & Temperature - ${date}`;
-    }
-
-    // Get all unique timestamps
-    const timestamps = new Set<string>();
-    energyData.forEach(d => timestamps.add(d.timestamp));
-    temperatureData.forEach(d => timestamps.add(d.timestamp));
-    
-    const sortedTimestamps = Array.from(timestamps).sort((a, b) => 
-      new Date(a).getTime() - new Date(b).getTime()
-    );
-
-    // Map data to timestamps
-    const energyMap = new Map(energyData.map(d => [d.timestamp, d.value]));
-    const tempMap = new Map(temperatureData.map(d => [d.timestamp, d.value]));
-
-    const energyValues = sortedTimestamps.map(t => energyMap.get(t) ?? null);
-    const tempValues = sortedTimestamps.map(t => tempMap.get(t) ?? null);
-
-    const option: echarts.EChartsOption = {
-      title: {
-        text: title,
-        left: 'center',
-        textStyle: {
-          fontSize: 18,
-          fontWeight: 'bold'
-        }
-      },
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: energyChartType === 'bar' ? 'shadow' : 'cross'
-        },
-        formatter: (params: any) => {
-          if (!Array.isArray(params) || params.length === 0) return '';
-          const date = new Date(params[0].axisValue);
-          
-          let timeStr = '';
-          if (aggregation === 'hourly') {
-            timeStr = `${String(date.getHours()).padStart(2, '0')}:00`;
-          } else if (aggregation === 'daily') {
-            timeStr = date.toLocaleDateString('en-GB');
-          } else {
-            timeStr = date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-          }
-          
-          let tooltip = `<strong>${timeStr}</strong><br/>`;
-          params.forEach((param: any) => {
-            if (param.value === null || param.value === undefined) return;
-            
-            // Safely extract the value
-            let val: number;
-            if (typeof param.value === 'number') {
-              val = param.value;
-            } else if (Array.isArray(param.value)) {
-              val = param.value[1] ?? param.value[0] ?? 0;
-            } else {
-              val = 0;
-            }
-            
-            const unit = param.seriesName === 'OAT' ? '°C' : energyUnit;
-            tooltip += `${param.marker} ${param.seriesName}: ${val.toFixed(2)}${unit}<br/>`;
-          });
-          return tooltip;
-        }
-      },
-      legend: {
-        data: [energyLabel, 'OAT'],
-        top: 40,
-        left: 'center'
-      },
-      grid: {
-        left: '60px',
-        right: '80px',
-        top: '100px',
-        bottom: '100px',
-        containLabel: false
-      },
-      xAxis: {
-        type: 'category',
-        data: sortedTimestamps,
-        axisLabel: {
-          rotate: aggregation === 'hourly' && period !== 'day' ? 45 : 0,
-          fontSize: 10,
-          formatter: (value: string) => {
-            const date = new Date(value);
-            if (isNaN(date.getTime())) return String(value);
-
-            if (aggregation === 'hourly') {
-              const hh = String(date.getHours()).padStart(2, '0');
-              if (period === 'day') {
-                return `${hh}:00`;
-              } else {
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                return `${day}/${month} ${hh}:00`;
-              }
-            } else if (aggregation === 'daily') {
-              const day = String(date.getDate()).padStart(2, '0');
-              if (period === 'month') {
-                return day;
-              } else {
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                return `${day}/${month}`;
-              }
-            } else {
-              return date.toLocaleDateString('en-GB', { month: 'short' });
-            }
-          }
-        },
-        boundaryGap: energyChartType === 'bar'
-      },
-      yAxis: [
-        {
-          type: 'value',
-          name: `${energyLabel} (${energyUnit})`,
-          position: 'left',
-          axisLabel: {
-            formatter: `{value}`,
-            color: '#c2410c'
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#c2410c'
-            }
-          },
-          splitLine: {
-            show: true,
-            lineStyle: {
-              type: 'dashed',
-              opacity: 0.3
-            }
-          }
-        },
-        {
-          type: 'value',
-          name: 'Temperature (°C)',
-          position: 'right',
-          axisLabel: {
-            formatter: '{value}°C',
-            color: '#3498db'
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#3498db'
-            }
-          },
-          splitLine: {
-            show: false
-          }
-        }
-      ],
-      series: [
-        {
-          name: energyLabel,
-          type: energyChartType,
-          yAxisIndex: 0,
-          data: energyValues,
-          smooth: energyChartType === 'line',
-          lineStyle: energyChartType === 'line' ? {
-            color: '#c2410c',
-            width: 2
-          } : undefined,
-          itemStyle: {
-            color: '#c2410c'
-          },
-          symbol: energyChartType === 'line' ? 'circle' : undefined,
-          symbolSize: energyChartType === 'line' ? 6 : undefined,
-          barMaxWidth: 40,
-          // Add area shading for line charts
-          areaStyle: energyChartType === 'line' ? {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#c2410c40' },
-              { offset: 1, color: '#c2410c10' }
-            ])
-          } : undefined
-        },
-        {
-          name: 'OAT',
-          type: 'line', // Always line for temperature
-          yAxisIndex: 1,
-          data: tempValues,
-          smooth: true,
-          lineStyle: {
-            color: '#3498db',
-            width: 2
-          },
-          itemStyle: {
-            color: '#3498db'
-          },
-          symbol: 'circle',
-          symbolSize: 6
-        }
-      ],
-      dataZoom: sortedTimestamps.length > 50 ? [
-        {
-          type: 'inside',
-          start: 0,
-          end: 100,
-          zoomOnMouseWheel: true,
-          moveOnMouseMove: true
-        },
-        {
-          type: 'slider',
-          start: 0,
-          end: 100,
-          height: 20,
-          bottom: 10
-        }
-      ] : []
-    };
-
-    chartInstance.current.setOption(option, true);
-
-    const handleResize = () => {
-      chartInstance.current?.resize();
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [energyData, temperatureData, period, date, aggregation, loading]);
-
-  useEffect(() => {
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.dispose();
-        chartInstance.current = null;
-      }
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="h-[500px] flex items-center justify-center bg-gray-50 rounded">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading chart data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <div ref={chartRef} style={{ width: '100%', height: '500px' }} />;
-}
-
 export default function SiteDataPage() {
   const [period, setPeriod] = useState<'day' | 'month' | 'year'>('day');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -742,13 +447,32 @@ export default function SiteDataPage() {
 
         {/* Time series chart with OAT */}
         <div className="mb-8 bg-white rounded-lg shadow-lg p-6">
-          <SiteTimeSeriesChart
-            energyData={fossilSeries}
-            temperatureData={oatData}
+          <MultiMetricChart
+            title="Site Energy & Temperature"
+            metrics={[
+              {
+                name: aggregation === 'hourly' ? 'Power' : 'Fossil Fuel',
+                data: fossilSeries,
+                unit: aggregation === 'hourly' ? 'kW' : 'kWh',
+                color: '#c2410c',
+                position: 'left',
+                chartType: 'auto',
+                showAreaShading: true
+              },
+              {
+                name: 'OAT',
+                data: oatData,
+                unit: '°C',
+                color: '#3498db',
+                position: 'right',
+                alwaysLine: true
+              }
+            ]}
             period={period}
             date={date}
             aggregation={aggregation}
             loading={loading || oatLoading}
+            height={500}
           />
         </div>
 
