@@ -35,6 +35,18 @@ function CombinedMetricsChart({
     let endDate: Date;
     let interval: string;
 
+    // Validate that we have a date
+    if (!date || date.trim() === '') {
+      console.error('Invalid date:', date);
+      // Return default to current day to prevent crash
+      const today = new Date();
+      return {
+        startDate: new Date(today.setHours(0, 0, 0, 0)),
+        endDate: new Date(today.setHours(23, 59, 59, 999)),
+        interval: '1h'
+      };
+    }
+
     // Ensure date is in correct format for the period
     let formattedDate = date;
     if (period === 'day') {
@@ -60,40 +72,56 @@ function CombinedMetricsChart({
       }
     }
 
-    if (period === 'day') {
-      // For a day, show 00:00 to 23:59
-      startDate = new Date(formattedDate + 'T00:00:00Z');
-      endDate = new Date(formattedDate + 'T23:59:59Z');
-      interval = aggregation === 'hourly' ? '1h' : '1d';
-    } else if (period === 'month') {
-      // For a month, show first day to last day
-      const [year, month] = formattedDate.split('-').map(Number);
-      startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-      endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59)); // Last day of month
-      
-      if (aggregation === 'hourly') {
-        interval = '1h';
-      } else if (aggregation === 'daily') {
-        interval = '1d';
+    try {
+      if (period === 'day') {
+        // For a day, show 00:00 to 23:59
+        startDate = new Date(formattedDate + 'T00:00:00Z');
+        endDate = new Date(formattedDate + 'T23:59:59Z');
+        interval = aggregation === 'hourly' ? '1h' : '1d';
+      } else if (period === 'month') {
+        // For a month, show first day to last day
+        const [year, month] = formattedDate.split('-').map(Number);
+        startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+        endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59)); // Last day of month
+        
+        if (aggregation === 'hourly') {
+          interval = '1h';
+        } else if (aggregation === 'daily') {
+          interval = '1d';
+        } else {
+          interval = '1d'; // Should not happen as monthly is disabled for month period
+        }
       } else {
-        interval = '1d'; // Should not happen as monthly is disabled for month period
+        // For a year, show Jan 1 to Dec 31
+        const year = parseInt(formattedDate);
+        startDate = new Date(Date.UTC(year, 0, 1, 0, 0, 0));
+        endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59));
+        
+        if (aggregation === 'hourly') {
+          interval = '1h';
+        } else if (aggregation === 'daily') {
+          interval = '1d';
+        } else {
+          interval = '1M'; // Monthly
+        }
       }
-    } else {
-      // For a year, show Jan 1 to Dec 31
-      const year = parseInt(formattedDate);
-      startDate = new Date(Date.UTC(year, 0, 1, 0, 0, 0));
-      endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59));
-      
-      if (aggregation === 'hourly') {
-        interval = '1h';
-      } else if (aggregation === 'daily') {
-        interval = '1d';
-      } else {
-        interval = '1M'; // Monthly
-      }
-    }
 
-    return { startDate, endDate, interval };
+      // Validate the dates are valid
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error('Invalid date created');
+      }
+
+      return { startDate, endDate, interval };
+    } catch (error) {
+      console.error('Error creating date range:', error, { date, formattedDate, period });
+      // Return safe default
+      const today = new Date();
+      return {
+        startDate: new Date(today.setHours(0, 0, 0, 0)),
+        endDate: new Date(today.setHours(23, 59, 59, 999)),
+        interval: '1h'
+      };
+    }
   };
 
   const { startDate, endDate, interval } = getTimeRangeAndInterval();
@@ -158,8 +186,13 @@ function CombinedMetricsChart({
     const series: any[] = [];
     let rightAxisCount = 0;
 
-    // Determine chart type based on aggregation
-    const chartType = aggregation === 'hourly' ? 'line' : 'bar';
+    // Determine chart type based on metric name - temp/humidity are always lines
+    const getChartType = (metricName: string) => {
+      if (metricName === 'Temperature' || metricName === 'Humidity') {
+        return 'line'; // Temperature and humidity are always line charts
+      }
+      return aggregation === 'hourly' ? 'line' : 'bar'; // Energy/Power follows aggregation
+    };
 
     const addMetric = (
       deviceId: string | undefined,
@@ -172,6 +205,7 @@ function CombinedMetricsChart({
       if (!deviceId || data.length === 0) return;
 
       const axisIndex = yAxis.length;
+      const chartType = getChartType(name); // Get chart type for this specific metric
       
       // Create a map of timestamps to values
       const valueMap = new Map<string, number>();
@@ -301,7 +335,7 @@ function CombinedMetricsChart({
       tooltip: {
         trigger: 'axis',
         axisPointer: {
-          type: chartType === 'line' ? 'cross' : 'shadow'
+          type: aggregation === 'hourly' ? 'cross' : 'shadow'
         },
         formatter: (params: any) => {
           if (!Array.isArray(params) || params.length === 0) return '';
@@ -377,7 +411,7 @@ function CombinedMetricsChart({
             }
           }
         },
-        boundaryGap: chartType === 'bar'
+        boundaryGap: aggregation !== 'hourly' // Bar charts need boundaryGap
       },
       yAxis,
       series,

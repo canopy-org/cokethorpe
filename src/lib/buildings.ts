@@ -53,11 +53,13 @@ export interface Building {
 export interface SiteConfig {
   electricityDeviceId?: string; // Device ID for main site electricity meter
   electricityConversionFactor?: number; // Conversion factor for electricity meter
+  oatSensorDeviceId?: string; // Device ID for outside air temperature sensor 
 }
 
 export const siteConfig: SiteConfig = {
   electricityDeviceId: 'uncategorised', // Replace with your actual electricity meter device ID
   electricityConversionFactor: 1, // Adjust based on your meter's pulse/kWh ratio
+  oatSensorDeviceId: 'TH-02', // Device ID for outside air temperature sensor 
 };
 
 export const buildings: Building[] = [

@@ -12,6 +12,10 @@ export interface SiteEnergyData {
     gasUsage?: number | null;
     oilUsage?: number | null;
   }[];
+  timeSeries?: {
+    gas: { timestamp: string; value: number }[];
+    oil: { timestamp: string; value: number }[];
+  };
 }
 
 interface DataPoint {
@@ -50,7 +54,9 @@ function parseHistoricalCSV(csv: string): DataPoint[] {
 
 export function useSiteEnergyData(
   timeRange: string = '-24h',
-  updateInterval: number = 10000
+  interval: string = '15m',
+  updateInterval: number = 10000,
+  stopTime?: string
 ) {
   const [data, setData] = useState<SiteEnergyData>({
     totalGas: null,
@@ -61,21 +67,10 @@ export function useSiteEnergyData(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Calculate appropriate interval based on time range
-  const getInterval = (range: string): string => {
-    if (range === '-1h') return '1m';
-    if (range === '-6h') return '5m';
-    if (range === '-24h') return '15m';
-    if (range === '-7d') return '1h';
-    if (range === '-30d') return '6h';
-    return '1d';
-  };
-
   useEffect(() => {
     async function fetchSiteData() {
       try {
         setLoading(true);
-        const interval = getInterval(timeRange);
 
         // accumulate per-timestamp totals for site-level timeSeries
         const gasTimeMap = new Map<string, number>();
@@ -91,7 +86,8 @@ export function useSiteEnergyData(
             'water',
             timeRange,
             interval,
-            electricityDevice.deviceId
+            electricityDevice.deviceId,
+            stopTime
           );
           const elecCsv = await queryInfluxDB(elecQuery);
           const elecData = parseHistoricalCSV(elecCsv);
@@ -122,7 +118,8 @@ export function useSiteEnergyData(
             'water',
             timeRange,
             interval,
-            device.deviceId
+            device.deviceId,
+            stopTime
           );
           const gasCsv = await queryInfluxDB(gasQuery);
           const gasData = parseHistoricalCSV(gasCsv);
@@ -159,7 +156,8 @@ export function useSiteEnergyData(
             'water',
             timeRange,
             interval,
-            device.deviceId
+            device.deviceId,
+            stopTime
           );
           const oilCsv = await queryInfluxDB(oilQuery);
           const oilData = parseHistoricalCSV(oilCsv);
@@ -224,10 +222,10 @@ export function useSiteEnergyData(
     }
 
     fetchSiteData();
-    const interval = setInterval(fetchSiteData, updateInterval);
+    const intervalId = setInterval(fetchSiteData, updateInterval);
     
-    return () => clearInterval(interval);
-  }, [timeRange, updateInterval]);
+    return () => clearInterval(intervalId);
+  }, [timeRange, interval, updateInterval, stopTime]);
 
   return { data, loading, error };
 }

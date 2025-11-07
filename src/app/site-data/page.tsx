@@ -1,44 +1,11 @@
 'use client';
 
 import { useSiteEnergyData } from '@/hooks/useSiteEnergyData';
+import { useHistoricalData } from '@/hooks/useHistoricalData';
 import { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts';
-import { getBuildingById } from '@/lib/buildings';
-import TimeSeriesChart from '@/components/charts/TimeSeriesChart';
-
-function TimePeriodSelector({ 
-  value, 
-  onChange 
-}: { 
-  value: string; 
-  onChange: (value: string) => void 
-}) {
-  const periods = [
-    { label: 'Last Hour', value: '-1h' },
-    { label: 'Last 24 Hours', value: '-24h' },
-    { label: 'Last 7 Days', value: '-7d' },
-    { label: 'Last 30 Days', value: '-30d' },
-    { label: 'Last 90 Days', value: '-90d' },
-    { label: 'Last 12 Months', value: '-365d' }
-  ];
-
-  return (
-    <div className="flex items-center gap-3">
-      <label className="text-sm font-medium text-gray-700">Time Period:</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm font-medium"
-      >
-        {periods.map((period) => (
-          <option key={period.value} value={period.value}>
-            {period.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
+import { getBuildingById, siteConfig } from '@/lib/buildings';
+import DateRangePicker from '@/components/charts/DateRangePicker';
 
 function SiteMetricCard({ 
   title, 
@@ -46,25 +13,36 @@ function SiteMetricCard({
   unit, 
   color, 
   icon,
-  timeRange 
+  period,
+  date
 }: { 
   title: string; 
   value: number | null; 
   unit: string; 
   color: string;
   icon: string;
-  timeRange: string;
+  period: 'day' | 'month' | 'year';
+  date: string;
 }) {
-  const getPeriodLabel = (range: string): string => {
-    const labels: { [key: string]: string } = {
-      '-1h': 'Last Hour',
-      '-6h': 'Last 6 Hours',
-      '-24h': 'Last 24 Hours',
-      '-7d': 'Last 7 Days',
-      '-30d': 'Last 30 Days',
-      '-90d': 'Last 12 Months'
-    };
-    return labels[range] || range;
+  const getPeriodLabel = () => {
+    if (period === 'day') {
+      const dateObj = new Date(date);
+      return dateObj.toLocaleDateString('en-GB', { 
+        weekday: 'short',
+        day: 'numeric', 
+        month: 'short',
+        year: 'numeric' 
+      });
+    } else if (period === 'month') {
+      const [year, month] = date.split('-');
+      const dateObj = new Date(parseInt(year), parseInt(month) - 1);
+      return dateObj.toLocaleDateString('en-GB', { 
+        month: 'long',
+        year: 'numeric' 
+      });
+    } else {
+      return date;
+    }
   };
 
   return (
@@ -77,7 +55,7 @@ function SiteMetricCard({
         {value !== null ? value.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '--'}
         <span className="text-2xl ml-2">{unit}</span>
       </p>
-      <p className="text-xs text-gray-400 mt-2">{getPeriodLabel(timeRange)}</p>
+      <p className="text-xs text-gray-400 mt-2">{getPeriodLabel()}</p>
     </div>
   );
 }
@@ -86,25 +64,35 @@ type ChartDisplayMode = 'absolute' | 'normalized';
 
 function BuildingComparisonChart({ 
   data,
-  timeRange 
+  period,
+  date
 }: { 
   data: { buildingId: string; buildingName: string; gasUsage?: number | null; oilUsage?: number | null }[];
-  timeRange: string;
+  period: 'day' | 'month' | 'year';
+  date: string;
 }) {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
   const [displayMode, setDisplayMode] = useState<ChartDisplayMode>('absolute');
 
-  const getPeriodLabel = (range: string): string => {
-    const labels: { [key: string]: string } = {
-      '-1h': 'Last Hour',
-      '-6h': 'Last 6 Hours',
-      '-24h': 'Last 24 Hours',
-      '-7d': 'Last 7 Days',
-      '-30d': 'Last 30 Days',
-      '-90d': 'Last 12 Months'
-    };
-    return labels[range] || range;
+  const getPeriodLabel = () => {
+    if (period === 'day') {
+      const dateObj = new Date(date);
+      return dateObj.toLocaleDateString('en-GB', { 
+        day: 'numeric', 
+        month: 'short',
+        year: 'numeric' 
+      });
+    } else if (period === 'month') {
+      const [year, month] = date.split('-');
+      const dateObj = new Date(parseInt(year), parseInt(month) - 1);
+      return dateObj.toLocaleDateString('en-GB', { 
+        month: 'long',
+        year: 'numeric' 
+      });
+    } else {
+      return date;
+    }
   };
 
   useEffect(() => {
@@ -149,8 +137,8 @@ function BuildingComparisonChart({
 
     const unit = displayMode === 'normalized' ? 'kWh/m²' : 'kWh';
     const title = displayMode === 'normalized' 
-      ? `Normalized Gas + Oil by Building (${getPeriodLabel(timeRange)})`
-      : `Gas + Oil by Building (${getPeriodLabel(timeRange)})`;
+      ? `Normalized Gas + Oil by Building (${getPeriodLabel()})`
+      : `Gas + Oil by Building (${getPeriodLabel()})`;
 
     // Chart configuration
     const option: echarts.EChartsOption = {
@@ -244,7 +232,7 @@ function BuildingComparisonChart({
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [data, timeRange, displayMode]);
+  }, [data, period, date, displayMode]);
 
   // Cleanup on unmount ONLY
   useEffect(() => {
@@ -299,78 +287,394 @@ function BuildingComparisonChart({
   );
 }
 
-export default function SiteDataPage() {
-  const [timeRange, setTimeRange] = useState('-24h');
-  const { data, loading, error } = useSiteEnergyData(timeRange, 10000);
+function SiteTimeSeriesChart({
+  energyData,
+  temperatureData,
+  period,
+  date,
+  aggregation,
+  loading
+}: {
+  energyData: { timestamp: string; value: number }[];
+  temperatureData: { timestamp: string; value: number }[];
+  period: 'day' | 'month' | 'year';
+  date: string;
+  aggregation: 'hourly' | 'daily' | 'monthly';
+  loading: boolean;
+}) {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // Build total timeseries for gas or oil by attempting:
-  // 1) data.timeSeries[type] (common server-side shape)
-  // 2) sum per-building series when each building exposes a series array
-  // 3) fallback to a single-point series using data.totalGas / data.totalOil
-  const buildTotalSeries = (type: 'gas' | 'oil') => {
-    // try top-level timeSeries.<type>
-    const tsRoot = (data as any)?.timeSeries;
-    if (tsRoot && Array.isArray(tsRoot[type])) {
-      return (tsRoot[type] as any[]).map(p => ({ timestamp: p.timestamp, value: p.value ?? 0 }));
+  useEffect(() => {
+    if (!chartRef.current || loading) return;
+
+    if (!chartInstance.current) {
+      chartInstance.current = echarts.init(chartRef.current);
     }
 
-    // attempt to locate per-building series arrays that match the type
-    const perBuildingSeries: { timestamp: string; value: number }[][] = [];
+    // Determine if showing power or energy
+    const isPower = aggregation === 'hourly';
+    const energyLabel = isPower ? 'Power' : 'Fossil Fuel';
+    const energyUnit = isPower ? 'kW' : 'kWh';
+    const energyChartType = isPower ? 'line' : 'bar';
 
-    if (Array.isArray(data.buildingBreakdown)) {
-      data.buildingBreakdown.forEach((b: any) => {
-        // inspect keys for an array of {timestamp, value}
-        for (const key of Object.keys(b || {})) {
-          const val = b[key];
-          if (!Array.isArray(val) || val.length === 0) continue;
-          const first = val[0];
-          if (!first || typeof first.timestamp !== 'string') continue;
-          // check if items look like time series points
-          if (typeof first.value === 'number') {
-            // prefer keys that include the type name (e.g., "gas", "oil")
-            if (key.toLowerCase().includes(type)) {
-              perBuildingSeries.push(val.map((p: any) => ({ timestamp: p.timestamp, value: p.value ?? 0 })));
-              break;
+    // Format title based on period
+    let title = '';
+    if (period === 'day') {
+      const dateObj = new Date(date);
+      title = `Site Energy & Temperature - ${dateObj.toLocaleDateString('en-GB', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })}`;
+    } else if (period === 'month') {
+      const [year, month] = date.split('-');
+      const dateObj = new Date(parseInt(year), parseInt(month) - 1);
+      title = `Site Energy & Temperature - ${dateObj.toLocaleDateString('en-GB', { 
+        year: 'numeric', 
+        month: 'long' 
+      })}`;
+    } else {
+      title = `Site Energy & Temperature - ${date}`;
+    }
+
+    // Get all unique timestamps
+    const timestamps = new Set<string>();
+    energyData.forEach(d => timestamps.add(d.timestamp));
+    temperatureData.forEach(d => timestamps.add(d.timestamp));
+    
+    const sortedTimestamps = Array.from(timestamps).sort((a, b) => 
+      new Date(a).getTime() - new Date(b).getTime()
+    );
+
+    // Map data to timestamps
+    const energyMap = new Map(energyData.map(d => [d.timestamp, d.value]));
+    const tempMap = new Map(temperatureData.map(d => [d.timestamp, d.value]));
+
+    const energyValues = sortedTimestamps.map(t => energyMap.get(t) ?? null);
+    const tempValues = sortedTimestamps.map(t => tempMap.get(t) ?? null);
+
+    const option: echarts.EChartsOption = {
+      title: {
+        text: title,
+        left: 'center',
+        textStyle: {
+          fontSize: 18,
+          fontWeight: 'bold'
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: energyChartType === 'bar' ? 'shadow' : 'cross'
+        },
+        formatter: (params: any) => {
+          if (!Array.isArray(params) || params.length === 0) return '';
+          const date = new Date(params[0].axisValue);
+          
+          let timeStr = '';
+          if (aggregation === 'hourly') {
+            timeStr = `${String(date.getHours()).padStart(2, '0')}:00`;
+          } else if (aggregation === 'daily') {
+            timeStr = date.toLocaleDateString('en-GB');
+          } else {
+            timeStr = date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+          }
+          
+          let tooltip = `<strong>${timeStr}</strong><br/>`;
+          params.forEach((param: any) => {
+            if (param.value === null || param.value === undefined) return;
+            
+            // Safely extract the value
+            let val: number;
+            if (typeof param.value === 'number') {
+              val = param.value;
+            } else if (Array.isArray(param.value)) {
+              val = param.value[1] ?? param.value[0] ?? 0;
+            } else {
+              val = 0;
             }
-            // if no explicit key-match, still accept as a candidate (only if no explicit found)
-            perBuildingSeries.push(val.map((p: any) => ({ timestamp: p.timestamp, value: p.value ?? 0 })));
-            break;
+            
+            const unit = param.seriesName === 'OAT' ? '°C' : energyUnit;
+            tooltip += `${param.marker} ${param.seriesName}: ${val.toFixed(2)}${unit}<br/>`;
+          });
+          return tooltip;
+        }
+      },
+      legend: {
+        data: [energyLabel, 'OAT'],
+        top: 40,
+        left: 'center'
+      },
+      grid: {
+        left: '60px',
+        right: '80px',
+        top: '100px',
+        bottom: '100px',
+        containLabel: false
+      },
+      xAxis: {
+        type: 'category',
+        data: sortedTimestamps,
+        axisLabel: {
+          rotate: aggregation === 'hourly' && period !== 'day' ? 45 : 0,
+          fontSize: 10,
+          formatter: (value: string) => {
+            const date = new Date(value);
+            if (isNaN(date.getTime())) return String(value);
+
+            if (aggregation === 'hourly') {
+              const hh = String(date.getHours()).padStart(2, '0');
+              if (period === 'day') {
+                return `${hh}:00`;
+              } else {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                return `${day}/${month} ${hh}:00`;
+              }
+            } else if (aggregation === 'daily') {
+              const day = String(date.getDate()).padStart(2, '0');
+              if (period === 'month') {
+                return day;
+              } else {
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                return `${day}/${month}`;
+              }
+            } else {
+              return date.toLocaleDateString('en-GB', { month: 'short' });
+            }
+          }
+        },
+        boundaryGap: energyChartType === 'bar'
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: `${energyLabel} (${energyUnit})`,
+          position: 'left',
+          axisLabel: {
+            formatter: `{value}`,
+            color: '#c2410c'
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#c2410c'
+            }
+          },
+          splitLine: {
+            show: true,
+            lineStyle: {
+              type: 'dashed',
+              opacity: 0.3
+            }
+          }
+        },
+        {
+          type: 'value',
+          name: 'Temperature (°C)',
+          position: 'right',
+          axisLabel: {
+            formatter: '{value}°C',
+            color: '#3498db'
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#3498db'
+            }
+          },
+          splitLine: {
+            show: false
           }
         }
-      });
+      ],
+      series: [
+        {
+          name: energyLabel,
+          type: energyChartType,
+          yAxisIndex: 0,
+          data: energyValues,
+          smooth: energyChartType === 'line',
+          lineStyle: energyChartType === 'line' ? {
+            color: '#c2410c',
+            width: 2
+          } : undefined,
+          itemStyle: {
+            color: '#c2410c'
+          },
+          symbol: energyChartType === 'line' ? 'circle' : undefined,
+          symbolSize: energyChartType === 'line' ? 6 : undefined,
+          barMaxWidth: 40,
+          // Add area shading for line charts
+          areaStyle: energyChartType === 'line' ? {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: '#c2410c40' },
+              { offset: 1, color: '#c2410c10' }
+            ])
+          } : undefined
+        },
+        {
+          name: 'OAT',
+          type: 'line', // Always line for temperature
+          yAxisIndex: 1,
+          data: tempValues,
+          smooth: true,
+          lineStyle: {
+            color: '#3498db',
+            width: 2
+          },
+          itemStyle: {
+            color: '#3498db'
+          },
+          symbol: 'circle',
+          symbolSize: 6
+        }
+      ],
+      dataZoom: sortedTimestamps.length > 50 ? [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100,
+          zoomOnMouseWheel: true,
+          moveOnMouseMove: true
+        },
+        {
+          type: 'slider',
+          start: 0,
+          end: 100,
+          height: 20,
+          bottom: 10
+        }
+      ] : []
+    };
+
+    chartInstance.current.setOption(option, true);
+
+    const handleResize = () => {
+      chartInstance.current?.resize();
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [energyData, temperatureData, period, date, aggregation, loading]);
+
+  useEffect(() => {
+    return () => {
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
+        chartInstance.current = null;
+      }
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="h-[500px] flex items-center justify-center bg-gray-50 rounded">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading chart data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <div ref={chartRef} style={{ width: '100%', height: '500px' }} />;
+}
+
+export default function SiteDataPage() {
+  const [period, setPeriod] = useState<'day' | 'month' | 'year'>('day');
+  const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [aggregation, setAggregation] = useState<'hourly' | 'daily' | 'monthly'>('hourly');
+
+  // Calculate time range and interval
+  const getTimeRangeAndInterval = () => {
+    let startDate: Date;
+    let endDate: Date;
+    let interval: string;
+
+    // Ensure date is in correct format
+    let formattedDate = date;
+    if (period === 'day') {
+      if (date.length === 7) formattedDate = `${date}-01`;
+      else if (date.length === 4) formattedDate = `${date}-01-01`;
+    } else if (period === 'month') {
+      if (date.length === 10) formattedDate = date.slice(0, 7);
+      else if (date.length === 4) formattedDate = `${date}-01`;
+    } else {
+      if (date.length === 10) formattedDate = date.slice(0, 4);
+      else if (date.length === 7) formattedDate = date.slice(0, 4);
     }
 
-    if (perBuildingSeries.length > 0) {
-      const map = new Map<string, number>();
-      perBuildingSeries.forEach(series => {
-        series.forEach(pt => {
-          map.set(pt.timestamp, (map.get(pt.timestamp) || 0) + (pt.value || 0));
-        });
-      });
-      const arr = Array.from(map.entries()).map(([timestamp, value]) => ({ timestamp, value }));
-      arr.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-      return arr;
+    if (period === 'day') {
+      startDate = new Date(formattedDate + 'T00:00:00Z');
+      endDate = new Date(formattedDate + 'T23:59:59Z');
+      interval = aggregation === 'hourly' ? '1h' : '1d';
+    } else if (period === 'month') {
+      const [year, month] = formattedDate.split('-').map(Number);
+      startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+      endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59));
+      interval = aggregation === 'hourly' ? '1h' : aggregation === 'daily' ? '1d' : '1d';
+    } else {
+      const year = parseInt(formattedDate);
+      startDate = new Date(Date.UTC(year, 0, 1, 0, 0, 0));
+      endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59));
+      interval = aggregation === 'hourly' ? '1h' : aggregation === 'daily' ? '1d' : '1M';
     }
 
-    // fallback: single-point series using the aggregate totals
-    const total = type === 'gas' ? (data.totalGas || 0) : (data.totalOil || 0);
-    return [{ timestamp: new Date().toISOString(), value: total }];
+    return { startDate, endDate, interval };
   };
 
-  const gasSeries = buildTotalSeries('gas');
-  const oilSeries = buildTotalSeries('oil');
+  const { startDate, endDate, interval } = getTimeRangeAndInterval();
+  const startTime = startDate.toISOString();
+  const stopTime = endDate.toISOString();
 
-  // Merge gas + oil into a single "fossil" series summing values by timestamp
-  const mergeSeries = (a: { timestamp: string; value: number }[], b: { timestamp: string; value: number }[]) => {
+  const { data, loading, error } = useSiteEnergyData(startTime, interval, 10000, stopTime);
+  
+  // Fetch OAT data
+  const oatDeviceId = siteConfig.oatSensorDeviceId;
+  const { data: oatData, loading: oatLoading } = useHistoricalData(
+    'temperature',
+    startTime,
+    interval,
+    oatDeviceId,
+    stopTime
+  );
+
+  // Update date format when period changes
+  const handlePeriodChange = (newPeriod: 'day' | 'month' | 'year') => {
+    setPeriod(newPeriod);
+    
+    const today = new Date();
+    if (newPeriod === 'day') {
+      setDate(today.toISOString().split('T')[0]);
+      setAggregation('hourly');
+    } else if (newPeriod === 'month') {
+      setDate(today.toISOString().slice(0, 7));
+      if (aggregation === 'monthly') {
+        setAggregation('daily');
+      }
+    } else {
+      setDate(today.getFullYear().toString());
+    }
+  };
+
+  // Merge gas + oil series
+  const mergeSeries = (
+    gas: { timestamp: string; value: number }[],
+    oil: { timestamp: string; value: number }[]
+  ) => {
     const map = new Map<string, number>();
-    a.forEach(pt => map.set(pt.timestamp, (map.get(pt.timestamp) || 0) + (pt.value || 0)));
-    b.forEach(pt => map.set(pt.timestamp, (map.get(pt.timestamp) || 0) + (pt.value || 0)));
+    gas.forEach(pt => map.set(pt.timestamp, (map.get(pt.timestamp) || 0) + (pt.value || 0)));
+    oil.forEach(pt => map.set(pt.timestamp, (map.get(pt.timestamp) || 0) + (pt.value || 0)));
     const merged = Array.from(map.entries()).map(([timestamp, value]) => ({ timestamp, value }));
     merged.sort((x, y) => new Date(x.timestamp).getTime() - new Date(y.timestamp).getTime());
     return merged;
   };
 
-  const fossilSeries = mergeSeries(gasSeries, oilSeries);
+  const fossilSeries = mergeSeries(data.timeSeries?.gas || [], data.timeSeries?.oil || []);
+  const fossilTotal = (data.totalGas || 0) + (data.totalOil || 0);
 
   if (error) {
     return (
@@ -384,20 +688,25 @@ export default function SiteDataPage() {
     );
   }
 
-  const fossilTotal = (data.totalGas || 0) + (data.totalOil || 0);
-
   return (
     <div className="min-h-screen bg-gray-50 w-full">
       <div className="w-full px-4 py-8">
-        {/* Header with Time Selector */}
+        {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">Site-Wide Energy Data</h1>
               <p className="text-gray-600">Overview of total electricity, gas and oil consumption across Cokethorpe</p>
             </div>
-            <TimePeriodSelector value={timeRange} onChange={setTimeRange} />
           </div>
+          <DateRangePicker 
+            period={period}
+            date={date}
+            aggregation={aggregation}
+            onPeriodChange={handlePeriodChange}
+            onDateChange={setDate}
+            onAggregationChange={setAggregation}
+          />
         </div>
 
         {/* Metrics Cards */}
@@ -408,7 +717,8 @@ export default function SiteDataPage() {
             unit="kWh"
             color="#3498db"
             icon="⚡"
-            timeRange={timeRange}
+            period={period}
+            date={date}
           />
           <SiteMetricCard
             title="Total Gas"
@@ -416,7 +726,8 @@ export default function SiteDataPage() {
             unit="kWh"
             color="#e67e22"
             icon="🔥"
-            timeRange={timeRange}
+            period={period}
+            date={date}
           />
           <SiteMetricCard
             title="Total Oil"
@@ -424,19 +735,20 @@ export default function SiteDataPage() {
             unit="kWh"
             color="#8b5e3c"
             icon="🛢️"
-            timeRange={timeRange}
+            period={period}
+            date={date}
           />
         </div>
 
-        {/* Time series charts for total Gas and total Oil (summed across devices) */}
-        <div className="mb-8 w-full">
-          <TimeSeriesChart
-            data={fossilSeries}
-            title="Total Fossil Fuel — All Devices (Gas + Oil)"
-            unit=" kWh"
-            color="#c2410c"
-            loading={loading}
-            height={420}
+        {/* Time series chart with OAT */}
+        <div className="mb-8 bg-white rounded-lg shadow-lg p-6">
+          <SiteTimeSeriesChart
+            energyData={fossilSeries}
+            temperatureData={oatData}
+            period={period}
+            date={date}
+            aggregation={aggregation}
+            loading={loading || oatLoading}
           />
         </div>
 
@@ -473,7 +785,11 @@ export default function SiteDataPage() {
 
         {/* Building Comparison Chart */}
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <BuildingComparisonChart data={data.buildingBreakdown} timeRange={timeRange} />
+          <BuildingComparisonChart 
+            data={data.buildingBreakdown} 
+            period={period}
+            date={date}
+          />
         </div>
 
         {/* Building List Table */}
