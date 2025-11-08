@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import DateRangePicker from '@/components/charts/DateRangePicker';
 import { useHistoricalData } from '@/hooks/useHistoricalData';
 import { useHistoricalEnergyData } from '@/hooks/useHistoricalEnergyData';
