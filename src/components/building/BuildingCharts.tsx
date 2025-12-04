@@ -8,6 +8,7 @@ import { getPrimarySensorDevice } from '@/lib/buildings';
 import MultiMetricChart from '@/components/charts/MultiMetricChart';
 import { getBuildingById, siteConfig } from '@/lib/buildings';
 import EnergySignatureChart from '@/components/charts/EnergySignatureChart'; 
+import ThermalCharacteristicsPanel from '@/components/building/ThermalCharacteristicsPanel';
 
 interface BuildingChartsProps {
   buildingId: string;
@@ -180,8 +181,10 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
         </div>
       </div>
 
-      {/* Energy Signature Chart - Add this section */}
+      {/* Energy Signature Chart */}
       <EnergySignatureChart buildingId={buildingId} />
+      {/* Thermal Characteristics Panel */}
+      <ThermalCharacteristicsPanel buildingId={buildingId} />
     </div>
   );
 }

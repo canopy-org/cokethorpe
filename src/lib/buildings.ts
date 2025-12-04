@@ -283,7 +283,7 @@ export const buildings: Building[] = [
   {
     id: '9',
     name: 'The Grove',
-    area: 600,
+    area: 304,
     coordinates: { top: '62%', left: '56%' },
     devices: [
       { 
