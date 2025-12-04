@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { queryInfluxDB, buildHistoricalFluxQuery, buildHistoricalRateFluxQuery, influxConfig } from '@/lib/influxdb';
-import { getDeviceConversionFactor, getBuildingById, gas_kWh_L, oil_kWh_L, getDeviceById } from '@/lib/buildings';
 
 export type EnergyCalculationType = 'cumulative' | 'rate' | 'normalized';
 
@@ -23,7 +21,6 @@ export function useHistoricalEnergyData(
 
   useEffect(() => {
     if (!deviceId) {
-      // DEBUG: log missing device id so we can see why hook exits early
       console.log('useHistoricalEnergyData: no deviceId provided for building', buildingId);
       setData([]);
       setLoading(false);
@@ -33,71 +30,26 @@ export function useHistoricalEnergyData(
     async function fetchHistoricalData() {
       if (!deviceId) return;
       setLoading(true);
+      
       try {
-        let query: string;
-        
-        if (calculationType === 'rate') {
-          // For rate calculation, use difference between readings
-          query = buildHistoricalRateFluxQuery(
-            influxConfig.bucket,
-            'alldata',
-            'water',
-            timeRange,
-            interval,
-            deviceId,
-            stopTime
-          );
-        } else {
-          // For cumulative and normalized, use mean aggregation
-          query = buildHistoricalFluxQuery(
-            influxConfig.bucket,
-            'alldata',
-            'water',
-            timeRange,
-            interval,
-            deviceId,
-            stopTime
-          );
+        const params = new URLSearchParams({
+          buildingId,
+          timeRange,
+          interval,
+          deviceId,
+          calculationType
+        });
+        if (stopTime) params.set('stopTime', stopTime);
+
+        const response = await fetch(`/api/historical-energy?${params}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch');
         }
 
-        const csvData = await queryInfluxDB(query);
-        const parsed = parseHistoricalCSV(csvData);
-        
-        // DEBUG: show parsed raw points length
-        console.log('useHistoricalEnergyData parsed points:', parsed.length, { buildingId, deviceId });
-        
-        // Determine conversion factor with fallbacks:
-        // 1) helper getDeviceConversionFactor (may return undefined)
-        // 2) device.conversionFactor stored on device object
-        // 3) energyType → global constants (oil_kWh_L / gas_kWh_L)
-        // 4) final fallback 1
-        let conversionFactor = getDeviceConversionFactor(buildingId, deviceId);
-        const deviceObj = getDeviceById(buildingId, deviceId) ?? getBuildingById(buildingId)?.devices?.find(d => d.deviceId === deviceId);
-        if (!conversionFactor || conversionFactor === 0) {
-          conversionFactor = deviceObj?.conversionFactor ?? (deviceObj?.energyType === 'oil' ? oil_kWh_L : deviceObj?.energyType === 'gas' ? gas_kWh_L : 1);
-        }
-        console.log('useHistoricalEnergyData conversion lookup:', { buildingId, deviceId, deviceObj, conversionFactor });
-
-        const convertedData = parsed.map(point => ({
-          timestamp: point.timestamp,
-          value: point.value * conversionFactor
-        }));
-        
-        // If normalized, divide by building area
-        if (calculationType === 'normalized') {
-          const building = getBuildingById(buildingId);
-          if (building && building.area > 0) {
-            // convert to kWh/m²
-            const normalized = convertedData.map(point => ({
-              timestamp: point.timestamp,
-              value: point.value / building.area
-            }));
-            // overwrite convertedData to normalized
-            convertedData.splice(0, convertedData.length, ...normalized);
-           }
-         }
-        
-        setData(convertedData);
+        console.log('useHistoricalEnergyData parsed points:', result.data.length, { buildingId, deviceId });
+        setData(result.data);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -111,34 +63,4 @@ export function useHistoricalEnergyData(
   }, [buildingId, timeRange, interval, deviceId, calculationType, stopTime]);
 
   return { data, loading, error };
-}
-
-function parseHistoricalCSV(csv: string): DataPoint[] {
-  const lines = csv.trim().split('\n');
-  const dataPoints: DataPoint[] = [];
-  
-  const dataLines = lines.filter(line => 
-    !line.startsWith('#') && 
-    !line.startsWith(',result,') &&
-    line.trim() !== ''
-  );
-
-  for (const line of dataLines) {
-    const values = line.split(',');
-    
-    if (values.length > 6) {
-      const timestamp = values[5];
-      const value = parseFloat(values[6]);
-      
-      if (!isNaN(value) && timestamp) {
-        // Return ISO timestamp instead of formatted string for better processing
-        dataPoints.push({
-          timestamp: timestamp,
-          value: value
-        });
-      }
-    }
-  }
-
-  return dataPoints;
 }

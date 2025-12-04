@@ -5,11 +5,12 @@ export interface InfluxConfig {
   bucket: string;
 }
 
+// Server-side only - these env vars won't be available in client components
 export const influxConfig: InfluxConfig = {
-  url: process.env.NEXT_PUBLIC_INFLUX_URL || 'https://influx.gedata.uk',
-  token: process.env.NEXT_PUBLIC_INFLUX_TOKEN || 'XZFvjXEqKubXQGXlYg3YOYlTjL_puyp295Ki_jrDmW8o40OaJHok09PmsFHZLpOCrwT6G_sLL3jANOiaM-pXWg==',
-  org: process.env.NEXT_PUBLIC_INFLUX_ORG || 'GEData',
-  bucket: process.env.NEXT_PUBLIC_INFLUX_BUCKET || 'lora_cokethorpe',
+  url: process.env.INFLUX_URL || '',
+  token: process.env.INFLUX_TOKEN || '',
+  org: process.env.INFLUX_ORG || '',
+  bucket: process.env.INFLUX_BUCKET || '',
 };
 
 export async function queryInfluxDB(query: string): Promise<string> {

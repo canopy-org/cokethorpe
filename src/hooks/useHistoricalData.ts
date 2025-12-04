@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { queryInfluxDB, buildHistoricalFluxQuery, influxConfig } from '@/lib/influxdb';
 
 interface DataPoint {
   timestamp: string;
@@ -27,23 +26,24 @@ export function useHistoricalData(
     async function fetchHistoricalData() {
       if (!deviceId) return;
       setLoading(true);
+      
       try {
-        const field = metric === 'temperature' ? 'temperature' : 'humidity';
-        
-        const query = buildHistoricalFluxQuery(
-          influxConfig.bucket,
-          'alldata',
-          field,
+        const params = new URLSearchParams({
+          metric,
           timeRange,
           interval,
-          deviceId,
-          stopTime
-        );
+          deviceId
+        });
+        if (stopTime) params.set('stopTime', stopTime);
 
-        const csvData = await queryInfluxDB(query);
-        const parsed = parseHistoricalCSV(csvData);
-        
-        setData(parsed);
+        const response = await fetch(`/api/historical?${params}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch');
+        }
+
+        setData(result.data);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -57,34 +57,4 @@ export function useHistoricalData(
   }, [metric, timeRange, interval, deviceId, stopTime]);
 
   return { data, loading, error };
-}
-
-function parseHistoricalCSV(csv: string): DataPoint[] {
-  const lines = csv.trim().split('\n');
-  const dataPoints: DataPoint[] = [];
-  
-  const dataLines = lines.filter(line => 
-    !line.startsWith('#') && 
-    !line.startsWith(',result,') &&
-    line.trim() !== ''
-  );
-
-  for (const line of dataLines) {
-    const values = line.split(',');
-    
-    if (values.length > 6) {
-      const timestamp = values[5];
-      const value = parseFloat(values[6]);
-      
-      if (!isNaN(value) && timestamp) {
-        // Return ISO timestamp for better processing
-        dataPoints.push({
-          timestamp: timestamp,
-          value: value
-        });
-      }
-    }
-  }
-
-  return dataPoints;
 }

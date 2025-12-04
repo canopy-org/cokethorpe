@@ -24,11 +24,11 @@ function BuildingMarker({
     const energyDeviceId = getPrimarySensorDevice(building.id, 'energy');
 
     // Fetch all metrics
-    const { value: temperature } = useSensorData('temperature', 5000, tempDeviceId);
-    const { value: humidity } = useSensorData('humidity', 5000, humidityDeviceId);
-    const { value: battery } = useSensorData('battery', 5000, batteryDeviceId);
-    const { value: energyNormalized } = useEnergyData(building.id, energyDeviceId, 5000, 'normalized');
-    const { value: energyRate } = useEnergyData(building.id, energyDeviceId, 5000, 'power');
+    const { value: temperature } = useSensorData('temperature', 30000, tempDeviceId);
+    const { value: humidity } = useSensorData('humidity', 30000, humidityDeviceId);
+    const { value: battery } = useSensorData('battery', 30000, batteryDeviceId);
+    const { value: energyNormalized } = useEnergyData(building.id, energyDeviceId, 30000, 'normalized');
+    const { value: energyRate } = useEnergyData(building.id, energyDeviceId, 30000, 'power');
 
     // Get the value to display based on selected metric
     let displayValue: number | null = null;
