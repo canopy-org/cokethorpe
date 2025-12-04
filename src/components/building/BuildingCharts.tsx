@@ -9,12 +9,21 @@ import MultiMetricChart from '@/components/charts/MultiMetricChart';
 
 interface BuildingChartsProps {
   buildingId: string;
+  floorArea?: number; // Add floor area for U-value calculation
 }
 
-export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
+export default function BuildingCharts({ buildingId, floorArea }: BuildingChartsProps) {
   const [period, setPeriod] = useState<'day' | 'month' | 'year'>('day');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [aggregation, setAggregation] = useState<'hourly' | 'daily' | 'monthly'>('hourly');
+
+  // Thermal model date range (default: last 14 days)
+  const [thermalEndDate] = useState(() => new Date());
+  const [thermalStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 14);
+    return date;
+  });
 
   // Update date format when period changes
   const handlePeriodChange = (newPeriod: 'day' | 'month' | 'year') => {
@@ -35,7 +44,7 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
     }
   };
 
-// Get device IDs
+  // Get device IDs
   const tempDeviceId = getPrimarySensorDevice(buildingId, 'temperature');
   const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
   const energyDeviceId = getPrimarySensorDevice(buildingId, 'energy');
@@ -81,7 +90,7 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
   const startTime = startDate.toISOString();
   const stopTime = endDate.toISOString();
 
-  // Fetch data
+  // Fetch data for historical charts
   const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', startTime, interval, tempDeviceId, stopTime);
   const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', startTime, interval, humidityDeviceId, stopTime);
   const { data: energyData, loading: energyLoading } = useHistoricalEnergyData(
@@ -100,7 +109,7 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
   const energyLabel = isPower ? 'Power' : 'Energy';
   const energyUnit = isPower ? 'kW' : 'kWh';
 
-  // Build metrics configuration
+  // Build metrics configuration for historical chart
   const metrics = [
     {
       name: 'Temperature',
@@ -129,27 +138,29 @@ export default function BuildingCharts({ buildingId }: BuildingChartsProps) {
   ];
 
   return (
-    <div>
-      <DateRangePicker 
-        period={period}
-        date={date}
-        aggregation={aggregation}
-        onPeriodChange={handlePeriodChange}
-        onDateChange={setDate}
-        onAggregationChange={setAggregation}
-      />
-
-      {/* Combined Chart */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <MultiMetricChart
-          title="Building Metrics"
-          metrics={metrics}
+    <div className="space-y-6">
+      {/* Historical Data Chart */}
+      <div>
+        <DateRangePicker 
           period={period}
           date={date}
           aggregation={aggregation}
-          loading={loading}
-          height={500}
+          onPeriodChange={handlePeriodChange}
+          onDateChange={setDate}
+          onAggregationChange={setAggregation}
         />
+
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <MultiMetricChart
+            title="Building Metrics"
+            metrics={metrics}
+            period={period}
+            date={date}
+            aggregation={aggregation}
+            loading={loading}
+            height={500}
+          />
+        </div>
       </div>
     </div>
   );

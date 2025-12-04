@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { SensorType } from '@/types/sensor';
-import { queryInfluxDB, parseInfluxCSV, buildFluxQuery, influxConfig } from '@/lib/influxdb';
 
 export function useSensorData(
-  metric: SensorType, 
+  metric: SensorType,
   updateInterval: number = 5000,
   deviceId?: string
 ) {
@@ -14,18 +13,17 @@ export function useSensorData(
   useEffect(() => {
     async function fetchData() {
       try {
-        const query = buildFluxQuery(
-          influxConfig.bucket,
-          'alldata',
-          metric,
-          '-2h',
-          deviceId
-        );
+        const params = new URLSearchParams({ metric });
+        if (deviceId) params.set('deviceId', deviceId);
 
-        const csvData = await queryInfluxDB(query);
-        const parsedValue = parseInfluxCSV(csvData);
-        
-        setValue(parsedValue);
+        const response = await fetch(`/api/sensors?${params}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch');
+        }
+
+        setValue(data.value);
         setLastUpdate(new Date());
         setError(null);
       } catch (err) {
@@ -36,7 +34,7 @@ export function useSensorData(
 
     fetchData();
     const interval = setInterval(fetchData, updateInterval);
-    
+
     return () => clearInterval(interval);
   }, [metric, updateInterval, deviceId]);
 

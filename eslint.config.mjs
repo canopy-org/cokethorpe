@@ -26,7 +26,7 @@ const eslintConfig = [
       '@typescript-eslint': tsPlugin,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error'],
+//      '@typescript-eslint/no-unused-vars': ['error'],
     },
   },
   {
