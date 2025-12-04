@@ -7,6 +7,7 @@ import { useHistoricalEnergyData } from '@/hooks/useHistoricalEnergyData';
 import { getPrimarySensorDevice } from '@/lib/buildings';
 import MultiMetricChart from '@/components/charts/MultiMetricChart';
 import { getBuildingById, siteConfig } from '@/lib/buildings';
+import EnergySignatureChart from '@/components/charts/EnergySignatureChart'; 
 
 interface BuildingChartsProps {
   buildingId: string;
@@ -153,7 +154,7 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
     }
   ];
 
-  return (
+ return (
     <div className="space-y-6">
       {/* Historical Data Chart */}
       <div>
@@ -178,6 +179,9 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
           />
         </div>
       </div>
+
+      {/* Energy Signature Chart - Add this section */}
+      <EnergySignatureChart buildingId={buildingId} />
     </div>
   );
 }
