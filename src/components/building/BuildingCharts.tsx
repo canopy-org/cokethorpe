@@ -6,6 +6,7 @@ import { useHistoricalData } from '@/hooks/useHistoricalData';
 import { useHistoricalEnergyData } from '@/hooks/useHistoricalEnergyData';
 import { getPrimarySensorDevice } from '@/lib/buildings';
 import MultiMetricChart from '@/components/charts/MultiMetricChart';
+import { getBuildingById, siteConfig } from '@/lib/buildings';
 
 interface BuildingChartsProps {
   buildingId: string;
@@ -48,6 +49,10 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
   const tempDeviceId = getPrimarySensorDevice(buildingId, 'temperature');
   const humidityDeviceId = getPrimarySensorDevice(buildingId, 'humidity');
   const energyDeviceId = getPrimarySensorDevice(buildingId, 'energy');
+
+  // Fetch OAT data
+  const oatDeviceId = siteConfig.oatSensorDeviceId;
+
 
   // Calculate time range
   const getTimeRangeAndInterval = () => {
@@ -93,6 +98,7 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
   // Fetch data for historical charts
   const { data: tempData, loading: tempLoading } = useHistoricalData('temperature', startTime, interval, tempDeviceId, stopTime);
   const { data: humidityData, loading: humidityLoading } = useHistoricalData('humidity', startTime, interval, humidityDeviceId, stopTime);
+  const { data: oatData, loading: oatLoading } = useHistoricalData('temperature', startTime, interval, oatDeviceId, stopTime);
   const { data: energyData, loading: energyLoading } = useHistoricalEnergyData(
     buildingId, 
     startTime, 
@@ -101,7 +107,7 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
     'rate',
     stopTime
   );
-
+  
   const loading = tempLoading || humidityLoading || energyLoading;
 
   // Determine if showing power or energy
@@ -112,12 +118,13 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
   // Build metrics configuration for historical chart
   const metrics = [
     {
-      name: 'Temperature',
+      name: 'Indoor Temperature',
       data: tempData,
       unit: '°C',
       color: '#e74c3c',
       position: 'left' as const,
-      alwaysLine: true
+      alwaysLine: true,
+      axisId: 'temperature'  // Add this
     },
     {
       name: 'Humidity',
@@ -134,6 +141,15 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
       color: '#f39c12',
       position: 'right' as const,
       chartType: 'auto' as const
+    },
+    {
+      name: 'Outdoor Temperature',
+      data: oatData,
+      unit: '°C',
+      color: '#0cc21b',
+      position: 'left' as const,
+      alwaysLine: true,
+      axisId: 'temperature'  // Add this
     }
   ];
 

@@ -448,13 +448,13 @@ export default function SiteDataPage() {
         {/* Time series chart with OAT */}
         <div className="mb-8 bg-white rounded-lg shadow-lg p-6">
           <MultiMetricChart
-            title="Site Energy & Temperature"
+            title="Site Energy & External Temperature"
             metrics={[
               {
                 name: aggregation === 'hourly' ? 'Power' : 'Fossil Fuel',
                 data: fossilSeries,
                 unit: aggregation === 'hourly' ? 'kW' : 'kWh',
-                color: '#c2410c',
+                color: '#f39c12',
                 position: 'left',
                 chartType: 'auto',
                 showAreaShading: true
@@ -463,7 +463,7 @@ export default function SiteDataPage() {
                 name: 'OAT',
                 data: oatData,
                 unit: '°C',
-                color: '#3498db',
+                color: '#0cc21b',
                 position: 'right',
                 alwaysLine: true
               }

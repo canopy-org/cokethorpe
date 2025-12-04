@@ -12,6 +12,7 @@ export interface MetricConfig {
   chartType?: 'line' | 'bar' | 'auto'; // 'auto' follows aggregation rules
   alwaysLine?: boolean; // Forces line chart regardless of aggregation (for temp/humidity)
   showAreaShading?: boolean; // Show gradient area under line charts
+  axisId?: string;  // Add this - metrics with same axisId share an axis
 }
 
 interface MultiMetricChartProps {
@@ -117,111 +118,128 @@ export default function MultiMetricChart({
     };
 
     // Build yAxis and series
-    const yAxis: any[] = [];
-    const series: any[] = [];
-    let rightAxisCount = 0;
+const yAxis: any[] = [];
+const series: any[] = [];
+const axisMap = new Map<string, number>(); // Maps axisId to yAxisIndex
+let rightAxisCount = 0;
+let leftAxisCount = 0;
 
-    metrics.forEach((metric) => {
-      if (metric.data.length === 0) return;
+metrics.forEach((metric) => {
+  if (metric.data.length === 0) return;
 
-      const axisIndex = yAxis.length;
-      const chartType = getChartType(metric);
+  const chartType = getChartType(metric);
+  
+  // Determine axis ID - use explicit axisId or generate one from name
+  const axisId = metric.axisId || metric.name;
+  
+  // Check if we already have an axis for this axisId
+  let axisIndex: number;
+  
+  if (axisMap.has(axisId)) {
+    // Reuse existing axis
+    axisIndex = axisMap.get(axisId)!;
+  } else {
+    // Create new axis
+    axisIndex = yAxis.length;
+    axisMap.set(axisId, axisIndex);
+    
+    // Calculate offset
+    let offset = 0;
+    if (metric.position === 'right') {
+      offset = rightAxisCount > 0 ? 60 * rightAxisCount : 0;
+      rightAxisCount += 1;
+    } else {
+      offset = leftAxisCount > 0 ? 60 * leftAxisCount : 0;
+      leftAxisCount += 1;
+    }
 
-      // Create a map of timestamps to values with normalization
-      const valueMap = new Map<string, number>();
-      metric.data.forEach(d => {
-        const dataDate = new Date(d.timestamp);
-        if (aggregation === 'hourly') {
-          dataDate.setMinutes(0, 0, 0);
-        } else if (aggregation === 'daily') {
-          dataDate.setHours(0, 0, 0, 0);
-        } else {
-          dataDate.setDate(1);
-          dataDate.setHours(0, 0, 0, 0);
+    // Add y-axis
+    yAxis.push({
+      type: 'value',
+      name: `${metric.unit}`,  // Simplified name since it's shared
+      position: metric.position,
+      offset,
+      axisLabel: {
+        formatter: `{value}`,
+        color: '#666'  // Neutral color for shared axis
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#666'
         }
-        valueMap.set(dataDate.toISOString(), d.value);
-      });
-
-      // Map values to complete timestamps
-      const values = timestamps.map(t => {
-        const normalizedDate = new Date(t);
-        if (aggregation === 'hourly') {
-          normalizedDate.setMinutes(0, 0, 0);
-        } else if (aggregation === 'daily') {
-          normalizedDate.setHours(0, 0, 0, 0);
-        } else {
-          normalizedDate.setDate(1);
-          normalizedDate.setHours(0, 0, 0, 0);
+      },
+      splitLine: {
+        show: metric.position === 'left' && leftAxisCount === 1,
+        lineStyle: {
+          type: 'dashed',
+          opacity: 0.3
         }
-        return valueMap.get(normalizedDate.toISOString()) ?? null;
-      });
-
-      // Calculate offset for right-side axes
-      let offset = 0;
-      if (metric.position === 'right') {
-        offset = rightAxisCount > 0 ? 60 * rightAxisCount : 0;
-        rightAxisCount += 1;
       }
-
-      // Add y-axis
-      yAxis.push({
-        type: 'value',
-        name: `${metric.name} (${metric.unit})`,
-        position: metric.position,
-        offset,
-        axisLabel: {
-          formatter: `{value}${metric.unit}`,
-          color: metric.color
-        },
-        axisLine: {
-          lineStyle: {
-            color: metric.color
-          }
-        },
-        splitLine: {
-          show: metric.position === 'left',
-          lineStyle: {
-            type: 'dashed',
-            opacity: 0.3
-          }
-        }
-      });
-
-      // Add series
-      const seriesConfig: any = {
-        name: metric.name,
-        type: chartType,
-        yAxisIndex: axisIndex,
-        data: values,
-        smooth: chartType === 'line',
-        itemStyle: {
-          color: metric.color
-        }
-      };
-
-      if (chartType === 'line') {
-        seriesConfig.lineStyle = {
-          color: metric.color,
-          width: 2
-        };
-        seriesConfig.symbol = 'circle';
-        seriesConfig.symbolSize = 6;
-
-        // Add area shading if requested
-        if (metric.showAreaShading) {
-          seriesConfig.areaStyle = {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: metric.color + '40' },
-              { offset: 1, color: metric.color + '10' }
-            ])
-          };
-        }
-      } else {
-        seriesConfig.barMaxWidth = 40;
-      }
-
-      series.push(seriesConfig);
     });
+  }
+
+  // Create value map and map to timestamps (keep existing logic)
+  const valueMap = new Map<string, number>();
+  metric.data.forEach(d => {
+    const dataDate = new Date(d.timestamp);
+    if (aggregation === 'hourly') {
+      dataDate.setMinutes(0, 0, 0);
+    } else if (aggregation === 'daily') {
+      dataDate.setHours(0, 0, 0, 0);
+    } else {
+      dataDate.setDate(1);
+      dataDate.setHours(0, 0, 0, 0);
+    }
+    valueMap.set(dataDate.toISOString(), d.value);
+  });
+
+  const values = timestamps.map(t => {
+    const normalizedDate = new Date(t);
+    if (aggregation === 'hourly') {
+      normalizedDate.setMinutes(0, 0, 0);
+    } else if (aggregation === 'daily') {
+      normalizedDate.setHours(0, 0, 0, 0);
+    } else {
+      normalizedDate.setDate(1);
+      normalizedDate.setHours(0, 0, 0, 0);
+    }
+    return valueMap.get(normalizedDate.toISOString()) ?? null;
+  });
+
+  // Add series
+  const seriesConfig: any = {
+    name: metric.name,
+    type: chartType,
+    yAxisIndex: axisIndex,
+    data: values,
+    smooth: chartType === 'line',
+    itemStyle: {
+      color: metric.color
+    }
+  };
+
+  if (chartType === 'line') {
+    seriesConfig.lineStyle = {
+      color: metric.color,
+      width: 2
+    };
+    seriesConfig.symbol = 'circle';
+    seriesConfig.symbolSize = 6;
+
+    if (metric.showAreaShading) {
+      seriesConfig.areaStyle = {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: metric.color + '40' },
+          { offset: 1, color: metric.color + '10' }
+        ])
+      };
+    }
+  } else {
+    seriesConfig.barMaxWidth = 40;
+  }
+
+  series.push(seriesConfig);
+});
 
     // Check if any series is a bar chart for boundaryGap
     const hasBarChart = series.some(s => s.type === 'bar');
