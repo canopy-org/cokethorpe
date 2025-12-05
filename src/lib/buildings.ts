@@ -66,7 +66,7 @@ export const buildings: Building[] = [
   {
     id: '1',
     name: 'Mansion House',
-    area: 2500,
+    area: 1250,
     coordinates: { top: '62%', left: '76%' },
     devices: [
       { 
@@ -93,7 +93,7 @@ export const buildings: Building[] = [
   {
     id: '2',
     name: 'Mansion Top Floor',
-    area: 1800,
+    area: 240,
     coordinates: { top: '60%', left: '72%' },
     devices: [
       { 
@@ -120,7 +120,7 @@ export const buildings: Building[] = [
   {
     id: '3',
     name: 'The Round House',
-    area: 3200,
+    area: 60,
     coordinates: { top: '60%', left: '67.5%' },
     devices: [
       { 
@@ -148,7 +148,7 @@ export const buildings: Building[] = [
   {
     id: '4',
     name: 'Headmaster\'s House',
-    area: 200,
+    area: 200, //to be confirmed
     coordinates: { top: '67%', left: '39%' },
     devices: [
       { 
@@ -175,7 +175,7 @@ export const buildings: Building[] = [
   {
     id: '5',
     name: 'Dining Hall',
-    area: 1500,
+    area: 500, //to be confirmed
     coordinates: { top: '36%', left: '48%' },
     devices: [
       { 
@@ -202,7 +202,7 @@ export const buildings: Building[] = [
   {
     id: '6',
     name: 'Art & Textiles',
-    area: 1400,
+    area: 155, //to be confirmed
     coordinates: { top: '55%', left: '65%' },
     devices: [
       { 
@@ -229,7 +229,7 @@ export const buildings: Building[] = [
   {
     id: '7',
     name: 'Old Schoolhouse',
-    area: 800,
+    area: 119,
     coordinates: { top: '62%', left: '65%' },
     devices: [
       { 
@@ -256,7 +256,7 @@ export const buildings: Building[] = [
   {
     id: '8',
     name: 'Medical & Bell Tower',
-    area: 900,
+    area: 146,
     coordinates: { top: '53%', left: '61%' },
     devices: [
       { 
@@ -283,7 +283,7 @@ export const buildings: Building[] = [
   {
     id: '9',
     name: 'The Grove',
-    area: 304,
+    area: 424,
     coordinates: { top: '62%', left: '56%' },
     devices: [
       { 
@@ -310,7 +310,7 @@ export const buildings: Building[] = [
   {
     id: '10',
     name: 'Sports Hall',
-    area: 2000,
+    area: 687,
     coordinates: { top: '34%', left: '22%' },
     devices: [
       { 
@@ -337,7 +337,7 @@ export const buildings: Building[] = [
   {
     id: '11',
     name: 'Vanbrugh',
-    area: 2000,
+    area: 600, //to be confirmed
     coordinates: { top: '44%', left: '35%' },
     devices: [
       { 
@@ -364,7 +364,7 @@ export const buildings: Building[] = [
   {
     id: '12',
     name: 'The Shed',
-    area: 2000,
+    area: 208,
     coordinates: { top: '32%', left: '27%' },
     devices: [
       { 
@@ -391,7 +391,7 @@ export const buildings: Building[] = [
   {
     id: '13',
     name: 'Pavilion',
-    area: 400,
+    area: 550, //to be confirmed
     coordinates: { top: '38%', left: '68%' },
     devices: [
       { 
@@ -418,7 +418,7 @@ export const buildings: Building[] = [
   {
     id: '14',
     name: 'SWIFT & Academic Building',
-    area: 1100,
+    area: 1100, //to be confirmed
     coordinates: { top: '54%', left: '42%' },
     devices: [
       { 
@@ -445,7 +445,7 @@ export const buildings: Building[] = [
   {
     id: '15',
     name: 'Teacher\'s Common Room',
-    area: 1600,
+    area: 109,
     coordinates: { top: '58%', left: '59%' },
     devices: [
       { 
@@ -472,7 +472,7 @@ export const buildings: Building[] = [
   {
     id: '16',
     name: 'DT',
-    area: 600,
+    area: 588, 
     coordinates: { top: '41%', left: '42%' },
     devices: [
       { 
@@ -499,7 +499,7 @@ export const buildings: Building[] = [
   {
     id: '17',
     name: 'Kitchen',
-    area: 600,
+    area: 200, //to be confirmed
     coordinates: { top: '30%', left: '45%' },
     devices: [
       { 
@@ -526,7 +526,7 @@ export const buildings: Building[] = [
   {
     id: '18',
     name: 'Music',
-    area: 400,
+    area: 98,
     coordinates: { top: '53%', left: '48%' },
     devices: [
       { 
