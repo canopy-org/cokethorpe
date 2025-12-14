@@ -10,7 +10,7 @@ interface ThermalCharacteristicsPanelProps {
 function getDefaultDateRange(): { startDate: string; endDate: string } {
   const end = new Date();
   const start = new Date();
-  start.setDate(start.getDate() - 30);
+  start.setDate(start.getDate() - 30); // Default to last 30 days
   
   return {
     startDate: start.toISOString().split('T')[0],
@@ -18,10 +18,72 @@ function getDefaultDateRange(): { startDate: string; endDate: string } {
   };
 }
 
+function getTauInterpretation(tau: number): { label: string; description: string; color: string } {
+  if (tau < 8) {
+    return {
+      label: 'Lightweight',
+      description: 'Fast response, quick to heat but loses heat rapidly. Typical of timber frame or poorly insulated buildings.',
+      color: '#f44336'
+    };
+  } else if (tau < 20) {
+    return {
+      label: 'Medium Weight',
+      description: 'Balanced thermal response. Typical of standard brick/block construction.',
+      color: '#ff9800'
+    };
+  } else if (tau < 40) {
+    return {
+      label: 'Heavyweight',
+      description: 'Slow response, retains heat well. Typical of solid masonry or well-insulated buildings.',
+      color: '#4caf50'
+    };
+  } else {
+    return {
+      label: 'Very Heavy',
+      description: 'Very slow thermal response. May indicate high thermal mass or complex heating systems.',
+      color: '#2196f3'
+    };
+  }
+}
+
+function getHLCInterpretation(hlcPerArea: number): { label: string; description: string; color: string } {
+  if (hlcPerArea < 0.5) {
+    return {
+      label: 'Excellent',
+      description: 'Very low heat loss. Passivhaus or highly insulated building.',
+      color: '#4caf50'
+    };
+  } else if (hlcPerArea < 1.5) {
+    return {
+      label: 'Good',
+      description: 'Low heat loss. Well-insulated modern building.',
+      color: '#8bc34a'
+    };
+  } else if (hlcPerArea < 3) {
+    return {
+      label: 'Average',
+      description: 'Typical heat loss for older buildings. Improvement potential exists.',
+      color: '#ff9800'
+    };
+  } else if (hlcPerArea < 5) {
+    return {
+      label: 'Poor',
+      description: 'High heat loss. Consider insulation upgrades.',
+      color: '#ff5722'
+    };
+  } else {
+    return {
+      label: 'Very Poor',
+      description: 'Very high heat loss. Significant improvement needed.',
+      color: '#f44336'
+    };
+  }
+}
+
 export default function ThermalCharacteristicsPanel({ buildingId }: ThermalCharacteristicsPanelProps) {
   const [dateRange, setDateRange] = useState(getDefaultDateRange);
-  const [designSetpoint, setDesignSetpoint] = useState(20);
-  const [designOAT, setDesignOAT] = useState(-3);
+  const [designSetpoint, setDesignSetpoint] = useState(20); // Indoor setpoint °C
+  const [designOAT, setDesignOAT] = useState(-3); // Design outdoor temperature °C
   
   const { data, loading, error } = useThermalCharacteristics({
     buildingId,
@@ -29,6 +91,7 @@ export default function ThermalCharacteristicsPanel({ buildingId }: ThermalChara
     endDate: dateRange.endDate
   });
 
+  // Calculate peak heat loss
   const designDeltaT = designSetpoint - designOAT;
   const peakHeatLoss = data?.characteristics?.hlc 
     ? data.characteristics.hlc * designDeltaT 
@@ -52,11 +115,15 @@ export default function ThermalCharacteristicsPanel({ buildingId }: ThermalChara
   }
 
   const chars = data?.characteristics;
+  const tauInfo = chars?.tau ? getTauInterpretation(chars.tau) : null;
+  const hlcInfo = chars?.hlcPerArea ? getHLCInterpretation(chars.hlcPerArea) : null;
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-gray-900">Thermal Characteristics</h3>
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">Thermal Characteristics</h3>
+        </div>
         <div className="flex items-center gap-3">
           <input
             type="date"
@@ -89,15 +156,120 @@ export default function ThermalCharacteristicsPanel({ buildingId }: ThermalChara
             <p className="text-gray-500 text-sm mt-1">
               Need more heating/cooling cycles to calculate thermal characteristics.
             </p>
+            {data?.message && <p className="text-gray-400 text-xs mt-2">{data.message}</p>}
           </div>
         </div>
       ) : (
-        <div className="space-y-5">
-          {/* Peak Heat Loss - Primary Display */}
+        <div className="space-y-6">
+          {/* Main Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Heat Loss Coefficient */}
+            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-5 border border-orange-100">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Heat Loss Coefficient</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Energy required per degree difference</p>
+                </div>
+                <span className="text-2xl">🔥</span>
+              </div>
+              {chars.hlc !== null ? (
+                <>
+                  <p className="text-3xl font-bold text-orange-600">
+                    {chars.hlc.toFixed(2)}
+                    <span className="text-lg font-normal text-gray-500 ml-1">kW/K</span>
+                  </p>
+                  <p className="text-lg text-orange-500 mt-1">
+                    {chars.hlcPerArea?.toFixed(2)}
+                    <span className="text-sm text-gray-500 ml-1">W/m²K</span>
+                  </p>
+                  {hlcInfo && (
+                    <div className="mt-3 pt-3 border-t border-orange-200">
+                      <span 
+                        className="inline-block px-2 py-1 rounded-full text-xs font-medium text-white"
+                        style={{ backgroundColor: hlcInfo.color }}
+                      >
+                        {hlcInfo.label}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-2">{hlcInfo.description}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-2xl text-gray-400">--</p>
+              )}
+            </div>
+
+            {/* Thermal Time Constant */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Thermal Time Constant (τ)</p>
+                  <p className="text-xs text-gray-400 mt-0.5">How quickly the building responds</p>
+                </div>
+                <span className="text-2xl">⏱️</span>
+              </div>
+              {chars.tau !== null ? (
+                <>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {chars.tau.toFixed(1)}
+                    <span className="text-lg font-normal text-gray-500 ml-1">hours</span>
+                  </p>
+                  <p className="text-sm text-blue-500 mt-1">
+                    ~{(chars.tau / 24).toFixed(1)} days to reach 63% of target
+                  </p>
+                  {tauInfo && (
+                    <div className="mt-3 pt-3 border-t border-blue-200">
+                      <span 
+                        className="inline-block px-2 py-1 rounded-full text-xs font-medium text-white"
+                        style={{ backgroundColor: tauInfo.color }}
+                      >
+                        {tauInfo.label}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-2">{tauInfo.description}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-2xl text-gray-400">--</p>
+              )}
+            </div>
+          </div>
+
+          {/* Derived Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            {/* Thermal Mass */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Effective Thermal Mass</p>
+              <p className="text-xl font-bold text-gray-800 mt-1">
+                {chars.thermalMass !== null ? (
+                  <>
+                    {chars.thermalMass.toFixed(1)}
+                    <span className="text-sm font-normal text-gray-500 ml-1">kWh/K</span>
+                  </>
+                ) : '--'}
+              </p>
+              {chars.thermalMassPerArea !== null && (
+                <p className="text-sm text-gray-500">
+                  {chars.thermalMassPerArea.toFixed(0)} Wh/m²K
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Peak Heat Loss Calculator */}
           <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-100">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Estimated Peak Heat Loss</p>
+                <p className="text-xs text-gray-500 mt-0.5">Based on design conditions</p>
+              </div>
+              <span className="text-2xl">❄️</span>
+            </div>
+            
+            {/* Design Condition Inputs */}
             <div className="flex flex-wrap items-center gap-4 mb-4">
               <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600">Setpoint:</label>
+                <label className="text-sm text-gray-600">Indoor Setpoint:</label>
                 <input
                   type="number"
                   value={designSetpoint}
@@ -105,7 +277,7 @@ export default function ThermalCharacteristicsPanel({ buildingId }: ThermalChara
                   step="0.5"
                   min="15"
                   max="25"
-                  className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="w-20 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
                 <span className="text-sm text-gray-500">°C</span>
               </div>
@@ -118,64 +290,45 @@ export default function ThermalCharacteristicsPanel({ buildingId }: ThermalChara
                   step="1"
                   min="-15"
                   max="10"
-                  className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="w-20 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
                 <span className="text-sm text-gray-500">°C</span>
               </div>
-              <span className="text-sm text-gray-400">ΔT = {designDeltaT}K</span>
+              <div className="text-sm text-gray-500">
+                ΔT = <span className="font-medium text-purple-600">{designDeltaT}K</span>
+              </div>
             </div>
 
-            <div className="flex items-baseline gap-6">
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Estimated Peak Heat Loss</p>
-                <p className="text-4xl font-bold text-purple-600">
-                  {peakHeatLoss !== null ? peakHeatLoss.toFixed(1) : '--'}
-                  <span className="text-xl font-normal text-gray-500 ml-1">kW</span>
+            {/* Peak Heat Loss Result */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white/60 rounded-lg p-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Peak Heat Loss</p>
+                <p className="text-3xl font-bold text-purple-600 mt-1">
+                  {peakHeatLoss !== null ? (
+                    <>
+                      {peakHeatLoss.toFixed(1)}
+                      <span className="text-lg font-normal text-gray-500 ml-1">kW</span>
+                    </>
+                  ) : '--'}
                 </p>
               </div>
-              <div className="text-2xl text-gray-300">|</div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Normalised</p>
-                <p className="text-2xl font-semibold text-purple-500">
-                  {peakHeatLossPerArea !== null ? peakHeatLossPerArea.toFixed(0) : '--'}
-                  <span className="text-sm font-normal text-gray-500 ml-1">W/m²</span>
+              <div className="bg-white/60 rounded-lg p-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Peak Heat Loss (Normalised)</p>
+                <p className="text-3xl font-bold text-purple-600 mt-1">
+                  {peakHeatLossPerArea !== null ? (
+                    <>
+                      {peakHeatLossPerArea.toFixed(0)}
+                      <span className="text-lg font-normal text-gray-500 ml-1">W/m²</span>
+                    </>
+                  ) : '--'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Based on {data?.buildingArea?.toLocaleString()} m² floor area
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Supporting Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Heat Loss Coefficient</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">
-                {chars.hlc !== null ? chars.hlc.toFixed(2) : '--'}
-                <span className="text-sm font-normal text-gray-500 ml-1">kW/K</span>
-              </p>
-              {chars.hlcPerArea !== null && (
-                <p className="text-sm text-gray-500">{chars.hlcPerArea.toFixed(2)} W/m²K</p>
-              )}
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Time Constant (τ)</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">
-                {chars.tau !== null ? chars.tau.toFixed(1) : '--'}
-                <span className="text-sm font-normal text-gray-500 ml-1">hours</span>
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Thermal Mass</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">
-                {chars.thermalMass !== null ? chars.thermalMass.toFixed(1) : '--'}
-                <span className="text-sm font-normal text-gray-500 ml-1">kWh/K</span>
-              </p>
-              {chars.thermalMassPerArea !== null && (
-                <p className="text-sm text-gray-500">{chars.thermalMassPerArea.toFixed(0)} Wh/m²K</p>
-              )}
-            </div>
-          </div>
         </div>
       )}
     </div>
