@@ -22,6 +22,10 @@ function getDefaultDateRange(): { startDate: string; endDate: string } {
   };
 }
 
+function getTodayString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
 function getDayOfWeek(dateStr: string): number {
   return new Date(dateStr).getDay();
 }
@@ -29,22 +33,32 @@ function getDayOfWeek(dateStr: string): number {
 function calculateRegression(data: { x: number; y: number }[]): RegressionResult | null {
   if (data.length < 3) return null;
   
-  const n = data.length;
-  const sumX = data.reduce((s, d) => s + d.x, 0);
-  const sumY = data.reduce((s, d) => s + d.y, 0);
-  const sumXY = data.reduce((s, d) => s + d.x * d.y, 0);
-  const sumX2 = data.reduce((s, d) => s + d.x * d.x, 0);
+  // Filter out any invalid values
+  const validData = data.filter(d => 
+    isFinite(d.x) && isFinite(d.y) && d.x >= 0 && d.y >= 0
+  );
+  
+  if (validData.length < 3) return null;
+  
+  const n = validData.length;
+  const sumX = validData.reduce((s, d) => s + d.x, 0);
+  const sumY = validData.reduce((s, d) => s + d.y, 0);
+  const sumXY = validData.reduce((s, d) => s + d.x * d.y, 0);
+  const sumX2 = validData.reduce((s, d) => s + d.x * d.x, 0);
 
   const denominator = n * sumX2 - sumX * sumX;
-  if (denominator === 0) return null;
+  if (denominator === 0 || !isFinite(denominator)) return null;
 
   const slope = (n * sumXY - sumX * sumY) / denominator;
   const intercept = (sumY - slope * sumX) / n;
 
+  // Validate results
+  if (!isFinite(slope) || !isFinite(intercept)) return null;
+
   // Calculate R²
   const meanY = sumY / n;
-  const ssTotal = data.reduce((s, d) => s + Math.pow(d.y - meanY, 2), 0);
-  const ssResidual = data.reduce((s, d) => {
+  const ssTotal = validData.reduce((s, d) => s + Math.pow(d.y - meanY, 2), 0);
+  const ssResidual = validData.reduce((s, d) => {
     const predicted = slope * d.x + intercept;
     return s + Math.pow(d.y - predicted, 2);
   }, 0);
@@ -53,7 +67,7 @@ function calculateRegression(data: { x: number; y: number }[]): RegressionResult
   return {
     slope: Math.round(slope * 1000) / 1000,
     intercept: Math.round(intercept * 100) / 100,
-    rSquared: Math.round(rSquared * 1000) / 1000
+    rSquared: Math.round(Math.max(0, Math.min(1, rSquared)) * 1000) / 1000
   };
 }
 
@@ -78,12 +92,18 @@ export default function EnergySignatureChart({
 
   // Filter data by excluded days and recalculate regression
   const { filteredData, filteredRegression } = useMemo(() => {
-    if (!data?.data) return { filteredData: [], filteredRegression: null };
+    if (!data?.data || data.data.length === 0) {
+      return { filteredData: [], filteredRegression: null };
+    }
     
     const filtered = data.data.filter(point => {
       const dayOfWeek = getDayOfWeek(point.date);
       return !excludedDays.has(dayOfWeek);
     });
+
+    if (filtered.length === 0) {
+      return { filteredData: [], filteredRegression: null };
+    }
 
     const area = data.buildingArea || 1;
     const divisor = normalized ? area : 1;
@@ -105,6 +125,29 @@ export default function EnergySignatureChart({
       }
       return next;
     });
+  };
+
+  // Validate and set date range, preventing future dates
+  const handleStartDateChange = (newStart: string) => {
+    const today = getTodayString();
+    const validStart = newStart > today ? today : newStart;
+    setDateRange(prev => ({
+      ...prev,
+      startDate: validStart,
+      // Ensure end date is not before start date
+      endDate: prev.endDate < validStart ? validStart : prev.endDate
+    }));
+  };
+
+  const handleEndDateChange = (newEnd: string) => {
+    const today = getTodayString();
+    const validEnd = newEnd > today ? today : newEnd;
+    setDateRange(prev => ({
+      ...prev,
+      endDate: validEnd,
+      // Ensure start date is not after end date
+      startDate: prev.startDate > validEnd ? validEnd : prev.startDate
+    }));
   };
 
   useEffect(() => {
@@ -143,15 +186,18 @@ export default function EnergySignatureChart({
 
     // Calculate regression line points for the chart (using filtered data)
     let regressionLine: [number, number][] = [];
-    if (filteredRegression && filteredData.length > 0) {
+    if (filteredRegression && filteredData.length >= 2) {
       const xValues = filteredData.map(d => d.degreeHours);
       const minX = Math.min(...xValues);
       const maxX = Math.max(...xValues);
       
-      regressionLine = [
-        [minX, filteredRegression.slope * minX + filteredRegression.intercept],
-        [maxX, filteredRegression.slope * maxX + filteredRegression.intercept]
-      ];
+      // Only draw line if we have a valid range
+      if (isFinite(minX) && isFinite(maxX) && minX !== maxX) {
+        regressionLine = [
+          [minX, filteredRegression.slope * minX + filteredRegression.intercept],
+          [maxX, filteredRegression.slope * maxX + filteredRegression.intercept]
+        ];
+      }
     }
 
     const excludedDayNames = Array.from(excludedDays).map(d => DAYS_OF_WEEK[d]).join(', ');
@@ -290,7 +336,8 @@ export default function EnergySignatureChart({
           <input
             type="date"
             value={dateRange.startDate}
-            onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+            max={getTodayString()}
+            onChange={(e) => handleStartDateChange(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
           />
         </div>
@@ -299,7 +346,8 @@ export default function EnergySignatureChart({
           <input
             type="date"
             value={dateRange.endDate}
-            onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+            max={getTodayString()}
+            onChange={(e) => handleEndDateChange(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
           />
         </div>
