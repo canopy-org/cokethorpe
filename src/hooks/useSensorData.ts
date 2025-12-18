@@ -3,7 +3,7 @@ import { SensorType } from '@/types/sensor';
 
 export function useSensorData(
   metric: SensorType,
-  updateInterval: number = 5000,
+  updateInterval: number = 30000,
   deviceId?: string
 ) {
   const [value, setValue] = useState<number | null>(null);

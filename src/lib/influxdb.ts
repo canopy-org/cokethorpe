@@ -108,7 +108,7 @@ export function buildHistoricalFluxQuery(
       |> filter(fn: (r) => r._measurement == "${measurement}")
       |> filter(fn: (r) => r._field == "${field}")
       ${deviceFilter}
-      |> aggregateWindow(every: ${interval}, fn: mean, createEmpty: false)
+      |> aggregateWindow(every: ${interval}, fn: mean, createEmpty: false, timeSrc: "_start")
       |> yield(name: "mean")
   `;
 }
@@ -179,7 +179,7 @@ export function buildHistoricalRateFluxQuery(
       |> filter(fn: (r) => r._measurement == "${measurement}")
       |> filter(fn: (r) => r._field == "${field}")
       ${deviceFilter}
-      |> aggregateWindow(every: ${interval}, fn: last, createEmpty: false)
+      |> aggregateWindow(every: ${interval}, fn: last, createEmpty: false, timeSrc: "_start")
       |> difference(nonNegative: true)
       |> yield(name: "rate")
   `;

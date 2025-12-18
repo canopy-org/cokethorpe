@@ -35,7 +35,7 @@ export interface Device {
 }
 
 export const gas_kWh_L = 0.01116; // kWh per litre of gas(approx)
-export const oil_kWh_L = 10.35; // kWh per litre (approx)
+export const oil_kWh_L = 10.35; // kWh per litre of oil(approx)
 
 export interface Building {
   id: string;
@@ -66,7 +66,7 @@ export const buildings: Building[] = [
   {
     id: '1',
     name: 'Mansion House',
-    area: 976,
+    area: 950,
     coordinates: { top: '62%', left: '76%' },
     devices: [
       { 
@@ -202,7 +202,7 @@ export const buildings: Building[] = [
   {
     id: '6',
     name: 'Art & Textiles',
-    area: 305, //to be confirmed
+    area: 330, 
     coordinates: { top: '55%', left: '65%' },
     devices: [
       { 
@@ -337,7 +337,7 @@ export const buildings: Building[] = [
   {
     id: '11',
     name: 'Vanbrugh',
-    area: 500, //to be confirmed
+    area: 1300, //to be confirmed
     coordinates: { top: '44%', left: '35%' },
     devices: [
       { 
@@ -391,7 +391,7 @@ export const buildings: Building[] = [
   {
     id: '13',
     name: 'Pavilion',
-    area: 550, //to be confirmed
+    area: 300, //approx
     coordinates: { top: '38%', left: '68%' },
     devices: [
       { 

@@ -87,7 +87,7 @@ export default function BuildingCharts({ buildingId, floorArea }: BuildingCharts
       const year = parseInt(formattedDate);
       startDate = new Date(Date.UTC(year, 0, 1, 0, 0, 0));
       endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59));
-      interval = aggregation === 'hourly' ? '1h' : aggregation === 'daily' ? '1d' : '1M';
+      interval = aggregation === 'hourly' ? '1h' : aggregation === 'daily' ? '1d' : '1mo';
     }
 
     return { startDate, endDate, interval };

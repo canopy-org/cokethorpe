@@ -24,6 +24,15 @@ export async function GET(request: NextRequest) {
         '1h',
         deviceId
       );
+    } else if (calculationType === 'normalized') {
+      query = buildRateFluxQuery(
+        influxConfig.bucket,
+        'alldata',
+        'water',
+        '-365d',
+        '365d',
+        deviceId
+      );
     } else {
       query = buildFluxQuery(
         influxConfig.bucket,

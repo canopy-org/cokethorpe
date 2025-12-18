@@ -5,7 +5,7 @@ export type EnergyCalculationType = 'cumulative' | 'power' | 'normalized';
 export function useEnergyData(
   buildingId: string,
   deviceId?: string,
-  updateInterval: number = 5000,
+  updateInterval: number = 30000,
   calculationType: EnergyCalculationType = 'cumulative'
 ) {
   const [value, setValue] = useState<number | null>(null);
