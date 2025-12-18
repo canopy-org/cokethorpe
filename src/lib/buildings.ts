@@ -152,7 +152,7 @@ export const buildings: Building[] = [
     coordinates: { top: '67%', left: '39%' },
     devices: [
       { 
-        deviceId: 'PC-20', 
+        deviceId: 'PC-19', 
         name: 'Headmasters - Gas',
         type: 'EM300-DI',
         location: 'Headmasters house',
@@ -160,16 +160,16 @@ export const buildings: Building[] = [
         energyType: 'gas'
       },
       { 
-        deviceId: 'TH-20', 
+        deviceId: 'TH-19', 
         name: 'Headmasters - TH sensor',
         type: 'EM300-TH',
         location: 'Headmasters house',
       },
     ],
     primarySensors: {
-      temperature: 'TH-20',
-      humidity: 'TH-20',
-      energy: 'PC-20',
+      temperature: 'TH-19',
+      humidity: 'TH-19',
+      energy: 'PC-19',
     }
   },
   {
@@ -525,29 +525,29 @@ export const buildings: Building[] = [
   },
   {
     id: '18',
-    name: 'Music',
+    name: 'Drama',
     area: 98,
     coordinates: { top: '53%', left: '48%' },
     devices: [
       { 
-        deviceId: 'PC-19', 
-        name: 'Music - Gas',
+        deviceId: 'PC-01', 
+        name: 'Drama - Gas',
         type: 'EM300-DI',
         location: 'External gas cupboard',
         conversionFactor: gas_kWh_L,
         energyType: 'gas'
       },
       { 
-        deviceId: 'TH-19', 
-        name: 'Music - TH sensor',
+        deviceId: 'TH-01', 
+        name: 'Drama - TH sensor',
         type: 'EM300-TH',
-        location: 'Music Room',
+        location: 'Drama Room',
       },
     ],
     primarySensors: {
-      temperature: 'TH-19',
-      humidity: 'TH-19',
-      energy: 'PC-19',
+      temperature: 'TH-01',
+      humidity: 'TH-01',
+      energy: 'PC-01',
     }
   }
 ];
